@@ -13,7 +13,7 @@ jobs:
       - uses: shuttle-hq/deploy-action@main
         with:
           deploy-key: ${{ secrets.SHUTTLE_API_KEY }}
-          name: "rainbow-bid"
+          name: "rainbow-bid-backend"
           allow-dirty: "true"
           no-test: "false"
           cargo-shuttle-version: "0.28.1"
