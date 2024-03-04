@@ -8,5 +8,6 @@ async fn hello_world() -> &'static str {
 async fn main() -> shuttle_axum::ShuttleAxum {
     let router = Router::new().route("/", get(hello_world));
 
+    println!("test");
     Ok(router.into())
 }
