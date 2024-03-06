@@ -1,15 +1,14 @@
-use axum::{routing::get, Router};
-use sqlx::PgPool;
+mod di;
+mod endpoints;
+mod routes;
 
-async fn hello_world() -> &'static str {
-    "Hello, world!"
-}
+use crate::routes::init_router;
+use sqlx::PgPool;
+use tracing::info;
 
 #[shuttle_runtime::main]
 async fn main(#[shuttle_shared_db::Postgres] db: PgPool) -> shuttle_axum::ShuttleAxum {
-    // sqlx::migrate!().run(&db).await.expect("Migrations failed");
+    info!("Starting server...");
 
-    let router = Router::new().route("/", get(hello_world));
-
-    Ok(router.into())
+    Ok(init_router(db).into())
 }
