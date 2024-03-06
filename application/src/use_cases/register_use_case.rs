@@ -2,10 +2,13 @@ use anyhow::anyhow;
 use domain::entities::user::User;
 use domain::interfaces::i_repositories_module::IRepositoriesModule;
 use domain::interfaces::i_user_repository::IUserRepository;
-use serde::Deserialize;
-use std::sync::Arc;
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde::Deserialize;
+use std::sync::Arc;
+use argon2::{Argon2, PasswordHasher};
+use argon2::password_hash::rand_core::OsRng;
+use argon2::password_hash::SaltString;
 use validator::Validate;
 
 lazy_static! {
@@ -48,8 +51,15 @@ impl<R: IRepositoriesModule> RegisterUseCase<R> {
             _ => {}
         }
 
+        // hash password
+        let salt = SaltString::generate(&mut OsRng);
+        let hashed_password = Argon2::default()
+            .hash_password(dto.password.as_bytes(), &salt)
+            .map_err(|_| anyhow!("Password hashing failed"))
+            .map(|hash| hash.to_string())?;
+
         // create user account
-        let user = User::new(dto.username, dto.email, dto.password);
+        let user = User::new(dto.username, dto.email, hashed_password);
         repository
             .insert(user)
             .await

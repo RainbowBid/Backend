@@ -14,3 +14,4 @@ validator = { version = "0.17.0", features = ["derive"] }
 serde = { version = "1.0.197", features = ["derive"] }
 regex = "1.10.3"
 lazy_static = { version = "1.4.0", features = [] }
+argon2 = "0.5.3"
