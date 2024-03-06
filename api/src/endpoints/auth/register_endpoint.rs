@@ -1,5 +1,5 @@
 use crate::di::AppState;
-use application::use_cases::register_use_case::RegisterRequest;
+use application::use_cases::register_use_case::dtos::RegisterRequest;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;

@@ -1,1 +1,1 @@
-pub(crate) mod register;
+pub(crate) mod register_endpoint;

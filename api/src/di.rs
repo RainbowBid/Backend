@@ -1,17 +1,18 @@
 use application::use_cases::register_use_case::RegisterUseCase;
-use infrastructure::modules::RepositoriesModule;
+use domain::entities::user::User;
+use infrastructure::repositories::DatabaseRepositoryImpl;
 use sqlx::PgPool;
 use std::sync::Arc;
 
 pub struct Modules {
-    pub(crate) register_use_case: RegisterUseCase<RepositoriesModule>,
+    pub(crate) register_use_case: RegisterUseCase<DatabaseRepositoryImpl<User>>,
 }
 
 impl Modules {
     pub fn new(db: PgPool) -> Self {
-        let repositories_module = RepositoriesModule::new(db);
+        let user_repository = Arc::new(DatabaseRepositoryImpl::new(db));
 
-        let register_use_case = RegisterUseCase::new(Arc::new(repositories_module));
+        let register_use_case = RegisterUseCase::new(user_repository);
 
         Self { register_use_case }
     }

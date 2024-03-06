@@ -7,7 +7,10 @@ use sqlx::PgPool;
 pub fn init_router(db: PgPool) -> Router {
     let app_state = AppState::new(db);
 
-    let auth_router = Router::new().route("/register", post(endpoints::auth::register::handle));
+    let auth_router = Router::new().route(
+        "/register",
+        post(endpoints::auth::register_endpoint::handle),
+    );
 
     let router = Router::new()
         .nest("/auth", auth_router)
