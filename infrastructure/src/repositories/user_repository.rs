@@ -14,7 +14,7 @@ impl IUserRepository for DatabaseRepositoryImpl<User> {
             .bind(id.to_string())
             .fetch_optional(pool.as_ref())
             .await
-            .map_err(|err| anyhow!("{:?}", err))?;
+            .map_err(|e| anyhow!("{:?}", e))?;
 
         match result {
             Some(user) => Ok(Some(User::try_from(user)?)),
@@ -28,7 +28,7 @@ impl IUserRepository for DatabaseRepositoryImpl<User> {
             .bind(email)
             .fetch_optional(pool.as_ref())
             .await
-            .map_err(|err| anyhow!("{:?}", err))?;
+            .map_err(|e| anyhow!("{:?}", e))?;
 
         match result {
             Some(user) => Ok(Some(User::try_from(user)?)),
@@ -42,7 +42,7 @@ impl IUserRepository for DatabaseRepositoryImpl<User> {
             .bind(username)
             .fetch_optional(pool.as_ref())
             .await
-            .map_err(|err| anyhow!("{:?}", err))?;
+            .map_err(|e| anyhow!("{:?}", e))?;
 
         match result {
             Some(user) => Ok(Some(User::try_from(user)?)),
@@ -62,7 +62,7 @@ impl IUserRepository for DatabaseRepositoryImpl<User> {
         .bind(user.password)
         .fetch_optional(pool.as_ref())
         .await
-        .map_err(|err| anyhow!("{:?}", err))?;
+        .map_err(|e| anyhow!("{:?}", e))?;
 
         match result {
             Some(user) => Ok(Some(User::try_from(user)?)),
