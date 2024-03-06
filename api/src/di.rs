@@ -16,3 +16,17 @@ impl Modules {
         Self { register_use_case }
     }
 }
+
+#[derive(Clone)]
+pub struct AppState {
+    pub modules: Arc<Modules>,
+}
+
+impl AppState {
+    pub fn new(db: PgPool) -> Self {
+        let modules = Modules::new(db);
+        let modules = Arc::new(modules);
+
+        Self { modules }
+    }
+}

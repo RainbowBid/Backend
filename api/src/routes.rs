@@ -1,18 +1,17 @@
-use crate::di::Modules;
+use crate::di::AppState;
 use crate::endpoints;
 use axum::routing::post;
-use axum::{Extension, Router};
+use axum::Router;
 use sqlx::PgPool;
-use std::sync::Arc;
 
 pub fn init_router(db: PgPool) -> Router {
-    let modules = Arc::new(Modules::new(db));
+    let app_state = AppState::new(db);
 
     let auth_router = Router::new().route("/register", post(endpoints::auth::register::handle));
 
     let router = Router::new()
         .nest("/auth", auth_router)
-        .layer(Extension(modules));
+        .with_state(app_state);
 
     router
 }

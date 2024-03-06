@@ -1,4 +1,8 @@
 use anyhow::anyhow;
+use argon2::password_hash::rand_core::OsRng;
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHasher};
+use domain::app_error::AppError;
 use domain::entities::user::User;
 use domain::interfaces::i_repositories_module::IRepositoriesModule;
 use domain::interfaces::i_user_repository::IUserRepository;
@@ -6,9 +10,6 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 use std::sync::Arc;
-use argon2::{Argon2, PasswordHasher};
-use argon2::password_hash::rand_core::OsRng;
-use argon2::password_hash::SaltString;
 use validator::Validate;
 
 lazy_static! {
@@ -35,19 +36,19 @@ impl<R: IRepositoriesModule> RegisterUseCase<R> {
         Self { repositories }
     }
 
-    pub async fn execute(&self, dto: RegisterRequest) -> anyhow::Result<()> {
+    pub async fn execute(&self, dto: RegisterRequest) -> Result<(), AppError> {
         let repository = self.repositories.user_repository();
 
         // check whether username and email are unique
         match repository.find_by_username(dto.username.clone()).await {
-            Ok(Some(_)) => return Err(anyhow!("Username already exists")),
-            Err(_) => return Err(anyhow!("User registration failed")),
+            Ok(Some(_)) => return Err(AppError::UsernameAlreadyExists(dto.username.clone())),
+            Err(e) => Err(e)?,
             _ => {}
         }
 
         match repository.find_by_email(dto.email.clone()).await {
-            Ok(Some(_)) => return Err(anyhow!("Email already exists")),
-            Err(_) => return Err(anyhow!("User registration failed")),
+            Ok(Some(_)) => return Err(AppError::EmailAlreadyExists(dto.email.clone())),
+            Err(e) => Err(e)?,
             _ => {}
         }
 
@@ -55,15 +56,12 @@ impl<R: IRepositoriesModule> RegisterUseCase<R> {
         let salt = SaltString::generate(&mut OsRng);
         let hashed_password = Argon2::default()
             .hash_password(dto.password.as_bytes(), &salt)
-            .map_err(|_| anyhow!("Password hashing failed"))
+            .map_err(|_| anyhow!("Failed to hash password"))
             .map(|hash| hash.to_string())?;
 
         // create user account
         let user = User::new(dto.username, dto.email, hashed_password);
-        repository
-            .insert(user)
-            .await
-            .map_err(|_| anyhow!("User registration failed"))?;
+        repository.insert(user).await?;
 
         Ok(())
     }

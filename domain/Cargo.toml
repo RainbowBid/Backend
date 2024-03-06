@@ -9,3 +9,8 @@ derive-new = "0.6.0"
 anyhow = "1.0.44"
 async-trait = "0.1.51"
 uuid = { verison = "0.8.2", features = ["v4"] }
+thiserror = "1.0.41"
+axum = "0.7.4"
+http = "1.1.0"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
