@@ -22,3 +22,5 @@ http-body = "1.0.0"
 validator = { version = "0.17.0", features = ["derive"] }
 axum-valid = "0.17.0"
 anyhow = "1.0.80"
+tower-http = { version = "0.5.2", features = ["cors"] }
+shuttle-secrets = "0.41.0"

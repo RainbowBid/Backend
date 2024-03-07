@@ -42,7 +42,7 @@ pub mod dtos {
             max = 30,
             message = "Username must be between 3 and 30 characters"
         ))]
-        pub username: String,
+        pub name: String,
         #[validate(email(message = "Invalid email"))]
         pub email: String,
         #[validate(custom(function = "validate_password",))]
@@ -60,46 +60,45 @@ impl<R: IUserRepository> RegisterUseCase<R> {
     }
 
     pub async fn execute(&self, dto: dtos::RegisterRequest) -> Result<(), AppError> {
-        info!("Registering user with username: {}", dto.username);
+        info!("Registering user with username: {}", dto.name);
 
         // check whether username and email are unique
         match self
             .user_repository
-            .find_by_username(dto.username.clone())
+            .find_by_username(dto.name.clone())
             .await
         {
             Ok(Some(_)) => {
-                error!("Username {} already exists", dto.username);
-                return Err(AppError::UsernameAlreadyExists(dto.username.clone()))
-            },
+                error!("Username {} already exists", dto.name);
+                return Err(AppError::UsernameAlreadyExists(dto.name.clone()));
+            }
             Err(e) => {
                 error!("Failed to find user by username: {:?}", e);
                 Err(e)?
-            },
+            }
             _ => {}
         }
 
         match self.user_repository.find_by_email(dto.email.clone()).await {
             Ok(Some(_)) => {
                 error!("Email {} already exists", dto.email);
-                return Err(AppError::EmailAlreadyExists(dto.email.clone()))
-            },
+                return Err(AppError::EmailAlreadyExists(dto.email.clone()));
+            }
             Err(e) => {
                 error!("Failed to find user by email: {:?}", e);
                 Err(e)?
-            },
+            }
             _ => {}
         }
 
         // hash password
-        let hashed_password = bcrypt::hash(dto.password.clone(), 12)
-            .map_err(|_| {
-                error!("Failed to hash password");
-                anyhow!("Failed to hash password")
-            })?;
+        let hashed_password = bcrypt::hash(dto.password.clone(), 12).map_err(|_| {
+            error!("Failed to hash password");
+            anyhow!("Failed to hash password")
+        })?;
 
         // create user account
-        let user = User::new(dto.username, dto.email, hashed_password);
+        let user = User::new(dto.name, dto.email, hashed_password);
         self.user_repository.insert(user).await?;
         info!("User registered successfully");
 
@@ -141,7 +140,7 @@ mod tests {
         let use_case = RegisterUseCase::new(Arc::new(user_repository));
 
         let dto = dtos::RegisterRequest {
-            username: "username".to_string(),
+            name: "username".to_string(),
             email: "email".to_string(),
             password: "Password1!".to_string(),
         };
@@ -154,19 +153,26 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn giver_dto_with_existing_username_when_executing_then_username_already_exists_error_is_returned() {
+    async fn giver_dto_with_existing_username_when_executing_then_username_already_exists_error_is_returned(
+    ) {
         // Arrange
         let mut user_repository = MockIUserRepository::new();
 
         user_repository
             .expect_find_by_username()
             .with(eq("username".to_string()))
-            .returning(|_| Ok(Some(User::new("username".to_string(), "email".to_string(), "hashed_password".to_string()))));
+            .returning(|_| {
+                Ok(Some(User::new(
+                    "username".to_string(),
+                    "email".to_string(),
+                    "hashed_password".to_string(),
+                )))
+            });
 
         let use_case = RegisterUseCase::new(Arc::new(user_repository));
 
         let dto = dtos::RegisterRequest {
-            username: "username".to_string(),
+            name: "username".to_string(),
             email: "email".to_string(),
             password: "Password1!".to_string(),
         };
@@ -183,7 +189,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn giver_dto_with_existing_email_when_executing_then_email_already_exists_error_is_returned() {
+    async fn giver_dto_with_existing_email_when_executing_then_email_already_exists_error_is_returned(
+    ) {
         // Arrange
         let mut user_repository = MockIUserRepository::new();
 
@@ -194,12 +201,18 @@ mod tests {
         user_repository
             .expect_find_by_email()
             .with(eq("email".to_string()))
-            .returning(|_| Ok(Some(User::new("username".to_string(), "email".to_string(), "hashed_password".to_string()))));
+            .returning(|_| {
+                Ok(Some(User::new(
+                    "username".to_string(),
+                    "email".to_string(),
+                    "hashed_password".to_string(),
+                )))
+            });
 
         let use_case = RegisterUseCase::new(Arc::new(user_repository));
 
         let dto = dtos::RegisterRequest {
-            username: "username".to_string(),
+            name: "username".to_string(),
             email: "email".to_string(),
             password: "Password1!".to_string(),
         };
@@ -236,7 +249,7 @@ mod tests {
         let use_case = RegisterUseCase::new(Arc::new(user_repository));
 
         let dto = dtos::RegisterRequest {
-            username: "username".to_string(),
+            name: "username".to_string(),
             email: "email".to_string(),
             password: "Password1!".to_string(),
         };
