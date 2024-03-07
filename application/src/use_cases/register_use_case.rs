@@ -3,6 +3,7 @@ use domain::app_error::AppError;
 use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
 use std::sync::Arc;
+use tracing::{error, info};
 
 pub mod dtos {
     use fancy_regex::Regex;
@@ -59,30 +60,48 @@ impl<R: IUserRepository> RegisterUseCase<R> {
     }
 
     pub async fn execute(&self, dto: dtos::RegisterRequest) -> Result<(), AppError> {
+        info!("Registering user with username: {}", dto.username);
+
         // check whether username and email are unique
         match self
             .user_repository
             .find_by_username(dto.username.clone())
             .await
         {
-            Ok(Some(_)) => return Err(AppError::UsernameAlreadyExists(dto.username.clone())),
-            Err(e) => Err(e)?,
+            Ok(Some(_)) => {
+                error!("Username {} already exists", dto.username);
+                return Err(AppError::UsernameAlreadyExists(dto.username.clone()))
+            },
+            Err(e) => {
+                error!("Failed to find user by username: {:?}", e);
+                Err(e)?
+            },
             _ => {}
         }
 
         match self.user_repository.find_by_email(dto.email.clone()).await {
-            Ok(Some(_)) => return Err(AppError::EmailAlreadyExists(dto.email.clone())),
-            Err(e) => Err(e)?,
+            Ok(Some(_)) => {
+                error!("Email {} already exists", dto.email);
+                return Err(AppError::EmailAlreadyExists(dto.email.clone()))
+            },
+            Err(e) => {
+                error!("Failed to find user by email: {:?}", e);
+                Err(e)?
+            },
             _ => {}
         }
 
         // hash password
         let hashed_password = bcrypt::hash(dto.password.clone(), 12)
-            .map_err(|_| anyhow!("Failed to hash password"))?;
+            .map_err(|_| {
+                error!("Failed to hash password");
+                anyhow!("Failed to hash password")
+            })?;
 
         // create user account
         let user = User::new(dto.username, dto.email, hashed_password);
         self.user_repository.insert(user).await?;
+        info!("User registered successfully");
 
         Ok(())
     }
