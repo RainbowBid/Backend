@@ -14,9 +14,9 @@ impl Modules {
     pub fn new(db: PgPool) -> Self {
         let user_repository = Arc::new(DatabaseRepositoryImpl::new(db));
 
-        let register_use_case = RegisterUseCase::new(&user_repository);
+        let register_use_case = RegisterUseCase::new(user_repository.clone());
 
-        let login_use_case = LoginUseCase::new(&user_repository);
+        let login_use_case = LoginUseCase::new(user_repository.clone());
 
         Self {
             register_use_case,

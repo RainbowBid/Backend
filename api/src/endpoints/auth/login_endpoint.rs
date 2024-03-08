@@ -16,5 +16,5 @@ pub async fn handle(
         .login_use_case
         .execute(request)
         .await
-        .map(|_| StatusCode::CREATED.into_response())
+        .map(|_| StatusCode::ACCEPTED.into_response())
 }

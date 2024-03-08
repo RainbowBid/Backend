@@ -51,7 +51,7 @@ pub struct LoginUseCase<R: IUserRepository>{
 }
 
 impl<R: IUserRepository> LoginUseCase<R> {
-    pub fn new(user_repository: Arc<&R>) -> Self { Self {user_repository} }
+    pub fn new(user_repository: Arc<R>) -> Self { Self {user_repository} }
 
     pub async fn execute(&self, dto: dtos::LoginRequest) -> Result<(), AppError>{
         info!("Logging user with email: {}", dto.email);
@@ -88,5 +88,6 @@ impl<R: IUserRepository> LoginUseCase<R> {
         //generate jwt
         // attach jwt on response'header
         todo!("generate and use jwt");
+        //JSON WEB TOKEN
     }
 }

@@ -36,7 +36,7 @@ pub fn init_router(db: PgPool, allowed_origin: String) -> Router {
     let auth_router = Router::new().route(
         "/register",
         post(endpoints::auth::register_endpoint::handle),
-    );
+    ).route("/login", post(endpoints::auth::login_endpoint::handle));
 
     let router = Router::new()
         .nest("/auth", auth_router)
