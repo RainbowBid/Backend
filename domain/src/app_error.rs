@@ -11,6 +11,10 @@ pub enum AppError {
     EmailAlreadyExists(String),
     #[error("User registration failed")]
     UserRegistrationFailed(#[from] anyhow::Error),
+    #[error("Email {0} is not registered.")]
+    NotRegisteredEmail(String),
+    #[error("User login failed. Bad password.")]
+    BadPassword(),
 }
 
 impl IntoResponse for AppError {
@@ -27,6 +31,10 @@ impl IntoResponse for AppError {
             AppError::UserRegistrationFailed(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
             }
+            AppError::NotRegisteredEmail(_) => {
+                (StatusCode::UNAUTHORIZED, error_message).into_response()
+            }
+            AppError::BadPassword() => (StatusCode::UNAUTHORIZED, error_message).into_response(),
         }
     }
 }
