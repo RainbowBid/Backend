@@ -3,8 +3,11 @@ use anyhow::anyhow;
 use tracing::error;
 use tracing::log::info;
 use domain::app_error::AppError;
+use domain::entities::token_claims::TokenClaims;
 use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
+use jsonwebtoken::{encode, EncodingKey, Header};
+
 
 pub mod dtos {
     use fancy_regex::Regex;
@@ -87,7 +90,21 @@ impl<R: IUserRepository> LoginUseCase<R> {
 
         //generate jwt
         // attach jwt on response'header
-        todo!("generate and use jwt");
+        //todo!("generate and use jwt");
         //JSON WEB TOKEN
+        let now = chrono::Utc::now();
+        let exp = (now + chrono::Duration::minutes(60)).timestamp() as usize;
+        let claims: TokenClaims = TokenClaims {
+            jwt: "".to_string(),
+            username: user.id.to_string(),
+            exp,
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(data.env.jwt_secret.as_ref()),
+        )
+            .unwrap();
     }
 }
