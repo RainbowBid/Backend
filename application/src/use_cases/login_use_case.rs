@@ -6,7 +6,6 @@ use domain::app_error::AppError;
 use domain::entities::token_claims::TokenClaims;
 use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
-use jsonwebtoken::{encode, EncodingKey, Header};
 
 
 pub mod dtos {
@@ -56,7 +55,7 @@ pub struct LoginUseCase<R: IUserRepository>{
 impl<R: IUserRepository> LoginUseCase<R> {
     pub fn new(user_repository: Arc<R>) -> Self { Self {user_repository} }
 
-    pub async fn execute(&self, dto: dtos::LoginRequest) -> Result<(), AppError>{
+    pub async fn execute(&self, dto: dtos::LoginRequest) -> Result<User, AppError> {
         info!("Logging user with email: {}", dto.email);
 
         // check wheather the email is registered AND the password matches the hash.
@@ -88,23 +87,6 @@ impl<R: IUserRepository> LoginUseCase<R> {
             }
         }
 
-        //generate jwt
-        // attach jwt on response'header
-        //todo!("generate and use jwt");
-        //JSON WEB TOKEN
-        let now = chrono::Utc::now();
-        let exp = (now + chrono::Duration::minutes(60)).timestamp() as usize;
-        let claims: TokenClaims = TokenClaims {
-            jwt: "".to_string(),
-            username: user.id.to_string(),
-            exp,
-        };
-
-        let token = encode(
-            &Header::default(),
-            &claims,
-            &EncodingKey::from_secret(data.env.jwt_secret.as_ref()),
-        )
-            .unwrap();
+        Ok(user)
     }
 }

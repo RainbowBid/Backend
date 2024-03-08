@@ -12,11 +12,7 @@ async fn main(
     #[shuttle_shared_db::Postgres] db: PgPool,
     #[shuttle_secrets::Secrets] secrets: SecretStore,
 ) -> shuttle_axum::ShuttleAxum {
+
     info!("Starting server...");
-
-    let allowed_origin = secrets
-        .get("ALLOWED_ORIGIN")
-        .expect("You need to set your ALLOWED_ORIGIN secret!");
-
-    Ok(init_router(db, allowed_origin).into())
+    Ok(init_router(db, secrets).into())
 }
