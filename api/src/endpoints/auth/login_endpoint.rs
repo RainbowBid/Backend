@@ -10,7 +10,6 @@ use domain::entities::token_claims::TokenClaims;
 use http::HeaderValue;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use shuttle_runtime::__internals::serde_json::json;
-use tracing::log::info;
 
 pub async fn handle(
     State(state): State<AppState>,
@@ -36,16 +35,16 @@ pub async fn handle(
             .map_err(|_| AppError::InvalidJwt())?;
 
             let mut response = Response::new(json!({}).to_string());
-            info!("{:?}", token);
             response
                 .headers_mut()
                 .insert(
-                    "Jwt",
-                    HeaderValue::from_str(&token).map_err(|_| AppError::InvalidJwt())?,
-                )
-                .expect("Can't build jwt");
+                    "Authorization",
+                    HeaderValue::from_str(format!("Bearer {}", &token).as_str())
+                        .map_err(|_| AppError::InvalidJwt())?,
+                );
+
             Ok(response)
-        });
+        })?;
 
     response
 }

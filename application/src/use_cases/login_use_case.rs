@@ -5,7 +5,7 @@ use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
 use std::sync::Arc;
 use tracing::error;
-use tracing::log::{debug, info};
+use tracing::log::info;
 
 pub mod dtos {
     use fancy_regex::Regex;
