@@ -1,12 +1,11 @@
-use std::sync::Arc;
 use anyhow::anyhow;
-use tracing::error;
-use tracing::log::info;
 use domain::app_error::AppError;
 use domain::entities::token_claims::TokenClaims;
 use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
-
+use std::sync::Arc;
+use tracing::error;
+use tracing::log::info;
 
 pub mod dtos {
     use fancy_regex::Regex;
@@ -48,19 +47,21 @@ pub mod dtos {
     }
 }
 
-pub struct LoginUseCase<R: IUserRepository>{
+pub struct LoginUseCase<R: IUserRepository> {
     user_repository: Arc<R>,
 }
 
 impl<R: IUserRepository> LoginUseCase<R> {
-    pub fn new(user_repository: Arc<R>) -> Self { Self {user_repository} }
+    pub fn new(user_repository: Arc<R>) -> Self {
+        Self { user_repository }
+    }
 
     pub async fn execute(&self, dto: dtos::LoginRequest) -> Result<User, AppError> {
         info!("Logging user with email: {}", dto.email);
 
         // check wheather the email is registered AND the password matches the hash.
         let user: User = match self.user_repository.find_by_email(dto.email.clone()).await {
-            Ok(Some(user)) => {user}
+            Ok(Some(user)) => user,
             Err(e) => {
                 error!("Failed to find user by email: {:?}", e);
                 Err(e)?
@@ -77,7 +78,7 @@ impl<R: IUserRepository> LoginUseCase<R> {
             anyhow!("Failed to hash password")
         })?;
 
-        match hashed_password == user.password{
+        match hashed_password == user.password {
             true => {
                 info!("Login succeeded!");
             }

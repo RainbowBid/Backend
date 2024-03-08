@@ -12,7 +12,6 @@ async fn main(
     #[shuttle_shared_db::Postgres] db: PgPool,
     #[shuttle_secrets::Secrets] secrets: SecretStore,
 ) -> shuttle_axum::ShuttleAxum {
-
     info!("Starting server...");
     Ok(init_router(db, secrets).into())
 }

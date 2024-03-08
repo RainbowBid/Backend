@@ -1,15 +1,15 @@
-use std::time::Duration;
 use crate::di::AppState;
 use application::use_cases::login_use_case::dtos::LoginRequest;
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use axum_valid::Valid;
-use http::HeaderValue;
-use sqlx::types::chrono::Utc;
 use domain::app_error::AppError;
 use domain::entities::token_claims::TokenClaims;
-use jsonwebtoken::{encode, Header, EncodingKey};
+use http::HeaderValue;
+use jsonwebtoken::{encode, EncodingKey, Header};
+use shuttle_runtime::__internals::serde_json::json;
+use chrono::{Duration,Utc};
 
 pub async fn handle(
     State(state): State<AppState>,
@@ -31,12 +31,15 @@ pub async fn handle(
                 &Header::default(),
                 &claims,
                 &EncodingKey::from_secret(state.config.jwt_key.as_ref()),
-            ).unwrap();
+            )
+            .unwrap();
 
-            let response = Response::new(()).headers().insert("Jwt", HeaderValue::from_str(&token))
-                .expect("Valid response can't be created");
+            let mut response = Response::new(json!({}).to_string());
+            response
+                .headers_mut()
+                .insert("Jwt", HeaderValue::from_str(&token).unwrap())
+                .expect("Can't build jwt");
             response
         });
-
     response
 }
