@@ -11,9 +11,9 @@ infrastructure = { path = "../infrastructure" }
 axum = { version = "0.7.3", features = ["multipart"] }
 axum-extra = { version = "0.9.2", features = ["cookie"] }
 serde = { version = "1.0.197", features = ["derive"] }
-shuttle-axum = "0.40.0"
-shuttle-runtime = "0.40.0"
-shuttle-shared-db = { version = "0.40.0", features = ["sqlx", "postgres"] }
+shuttle-axum = "0.41.0"
+shuttle-runtime = "0.41.0"
+shuttle-shared-db = { version = "0.41.0", features = ["sqlx", "postgres"] }
 sqlx = { version = "0.7.3", features = ["postgres", "runtime-tokio-rustls"] }
 tokio = "1.28.2"
 tracing = "0.1.40"
