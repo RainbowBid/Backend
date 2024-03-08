@@ -21,7 +21,8 @@ pub async fn handle(
         .execute(request)
         .await
         .map(|user| {
-            let exp = (Utc::now() + Duration::minutes(60)).timestamp() as usize;
+            let exp = (Utc::now() + Duration::minutes(state.config.jwt_duration.parse().unwrap()))
+                .timestamp() as usize;
             let claims: TokenClaims = TokenClaims {
                 username: user.id.to_string(),
                 exp,
@@ -35,13 +36,11 @@ pub async fn handle(
             .map_err(|_| AppError::InvalidJwt())?;
 
             let mut response = Response::new(json!({}).to_string());
-            response
-                .headers_mut()
-                .insert(
-                    "Authorization",
-                    HeaderValue::from_str(format!("Bearer {}", &token).as_str())
-                        .map_err(|_| AppError::InvalidJwt())?,
-                );
+            response.headers_mut().insert(
+                "Authorization",
+                HeaderValue::from_str(format!("Bearer {}", &token).as_str())
+                    .map_err(|_| AppError::InvalidJwt())?,
+            );
 
             Ok(response)
         })?;

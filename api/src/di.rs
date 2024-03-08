@@ -29,12 +29,17 @@ impl Modules {
 pub struct Constants {
     pub jwt_key: String,
     pub allowed_origin: String,
+    pub jwt_duration: String,
 }
 impl Constants {
     pub fn new(secrets: SecretStore) -> Self {
         let jwt_key = secrets
             .get("JWT_KEY")
             .expect("You need to set your JWT_KEY secret!");
+
+        let jwt_duration = secrets
+            .get("JWT_DURATION_MINUTES")
+            .expect("You need to set you JWT_DURATION_MINUTES secret!");
 
         let allowed_origin = secrets
             .get("ALLOWED_ORIGIN")
@@ -43,6 +48,7 @@ impl Constants {
         Self {
             jwt_key,
             allowed_origin,
+            jwt_duration,
         }
     }
 }
