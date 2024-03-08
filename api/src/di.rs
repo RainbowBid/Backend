@@ -33,7 +33,7 @@ pub struct Constants {
 impl Constants {
     pub fn new(secrets: SecretStore) -> Self {
         let jwt_key = secrets
-            .get("JWT_SECRET")
+            .get("JWT_KEY")
             .expect("You need to set your JWT_KEY secret!");
 
         let allowed_origin = secrets

@@ -4,12 +4,13 @@ use axum::extract::State;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use axum_valid::Valid;
+use chrono::{Duration, Utc};
 use domain::app_error::AppError;
 use domain::entities::token_claims::TokenClaims;
 use http::HeaderValue;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use shuttle_runtime::__internals::serde_json::json;
-use chrono::{Duration,Utc};
+use tracing::log::info;
 
 pub async fn handle(
     State(state): State<AppState>,
@@ -32,14 +33,19 @@ pub async fn handle(
                 &claims,
                 &EncodingKey::from_secret(state.config.jwt_key.as_ref()),
             )
-            .unwrap();
+            .map_err(|_| AppError::InvalidJwt())?;
 
             let mut response = Response::new(json!({}).to_string());
+            info!("{:?}", token);
             response
                 .headers_mut()
-                .insert("Jwt", HeaderValue::from_str(&token).unwrap())
+                .insert(
+                    "Jwt",
+                    HeaderValue::from_str(&token).map_err(|_| AppError::InvalidJwt())?,
+                )
                 .expect("Can't build jwt");
-            response
+            Ok(response)
         });
+
     response
 }

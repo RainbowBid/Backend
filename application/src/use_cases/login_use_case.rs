@@ -5,7 +5,7 @@ use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
 use std::sync::Arc;
 use tracing::error;
-use tracing::log::info;
+use tracing::log::{debug, info};
 
 pub mod dtos {
     use fancy_regex::Regex;
@@ -72,18 +72,15 @@ impl<R: IUserRepository> LoginUseCase<R> {
             }
         };
 
-        //todo!("common usage static struct - #1 to place in");
-        let hashed_password = bcrypt::hash(dto.password.clone(), 12).map_err(|_| {
+        match bcrypt::verify(dto.password.clone(), user.password.as_str()).map_err(|_| {
             error!("Failed to hash password");
             anyhow!("Failed to hash password")
-        })?;
-
-        match hashed_password == user.password {
+        })? {
             true => {
                 info!("Login succeeded!");
             }
             false => {
-                error!("LoginBad password.");
+                error!("Bad password.");
                 return Err(AppError::BadPassword());
             }
         }

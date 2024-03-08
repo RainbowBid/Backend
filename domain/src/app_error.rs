@@ -15,6 +15,8 @@ pub enum AppError {
     NotRegisteredEmail(String),
     #[error("User login failed. Bad password.")]
     BadPassword(),
+    #[error("Missing or expired jwt.")]
+    InvalidJwt(),
 }
 
 impl IntoResponse for AppError {
@@ -35,6 +37,7 @@ impl IntoResponse for AppError {
                 (StatusCode::UNAUTHORIZED, error_message).into_response()
             }
             AppError::BadPassword() => (StatusCode::UNAUTHORIZED, error_message).into_response(),
+            AppError::InvalidJwt() => (StatusCode::UNAUTHORIZED, error_message).into_response(),
         }
     }
 }

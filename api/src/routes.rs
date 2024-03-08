@@ -7,7 +7,7 @@ use axum::http::header::{
 use axum::http::{HeaderValue, Method};
 use axum::routing::post;
 use axum::Router;
-use shuttle_secrets::{SecretStore};
+use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 use tower_http::cors::CorsLayer;
 
@@ -39,7 +39,6 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
                 .parse::<HeaderValue>()
                 .unwrap(),
         );
-
 
     let auth_router = Router::new()
         .route(
