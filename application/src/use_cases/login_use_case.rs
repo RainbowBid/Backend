@@ -1,6 +1,5 @@
 use anyhow::anyhow;
 use domain::app_error::AppError;
-use domain::entities::token_claims::TokenClaims;
 use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
 use std::sync::Arc;
@@ -13,7 +12,6 @@ pub mod dtos {
     use serde::Deserialize;
     use validator::{Validate, ValidationError};
 
-    //todo!("common usage static struct - #1 to place in -> regex + validate_password");
     lazy_static! {
         static ref LOWERCASE_REGEX: Regex = Regex::new(r"[a-z]").unwrap();
         static ref UPPERCASE_REGEX: Regex = Regex::new(r"[A-Z]").unwrap();

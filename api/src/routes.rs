@@ -36,6 +36,15 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
             CONTENT_TYPE,
             ACCESS_CONTROL_ALLOW_HEADERS,
         ])
+        .expose_headers(vec![
+            ORIGIN,
+            AUTHORIZATION,
+            ACCEPT,
+            ACCESS_CONTROL_REQUEST_HEADERS,
+            ACCESS_CONTROL_REQUEST_METHOD,
+            CONTENT_TYPE,
+            ACCESS_CONTROL_ALLOW_HEADERS,
+        ])
         .allow_origin(
             app_state
                 .config
