@@ -24,7 +24,8 @@ pub async fn handle(
             let exp = (Utc::now() + Duration::minutes(state.config.jwt_duration.parse().unwrap()))
                 .timestamp() as usize;
             let claims: TokenClaims = TokenClaims {
-                username: user.id.to_string(),
+                sub: user.id.to_string(),
+                username: user.name,
                 exp,
             };
 
