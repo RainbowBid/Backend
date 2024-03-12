@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn giver_dto_with_existing_username_when_executing_then_username_already_exists_error_is_returned(
+    async fn given_dto_with_existing_username_when_executing_then_username_already_exists_error_is_returned(
     ) {
         // Arrange
         let mut user_repository = MockIUserRepository::new();
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn giver_dto_with_existing_email_when_executing_then_email_already_exists_error_is_returned(
+    async fn given_dto_with_existing_email_when_executing_then_email_already_exists_error_is_returned(
     ) {
         // Arrange
         let mut user_repository = MockIUserRepository::new();

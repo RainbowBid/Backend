@@ -38,7 +38,7 @@ pub mod dtos {
         }
     }
 
-    #[derive(Deserialize, Debug, Validate)]
+    #[derive(Deserialize, Debug, Validate, Clone)]
     pub struct LoginRequest {
         #[validate(email(message = "Invalid email"))]
         pub email: String,
@@ -86,5 +86,119 @@ impl<R: IUserRepository> LoginUseCase<R> {
         }
 
         Ok(user)
+    }
+}
+
+#[cfg(test)]
+mod tests{
+    use std::sync::Arc;
+    use anyhow::anyhow;
+    use mockall::predicate::eq;
+    use domain::app_error::AppError;
+    use domain::entities::user::User;
+    use domain::interfaces::i_user_repository::MockIUserRepository;
+    use crate::use_cases::login_use_case::{dtos, LoginUseCase};
+
+    #[tokio::test]
+    async fn given_request_with_valid_data_when_executing_then_user_is_signed_in(){
+        //Arrange
+        let mut user_repository = MockIUserRepository::new();
+        let user = User::new("name".to_string(), "email".to_string(), bcrypt::hash("password".to_string(), 12).unwrap());
+        user_repository
+            .expect_find_by_email()
+            .with(eq("email".to_string()))
+            .returning(move |_| Ok(Some(user.clone())));
+
+        let use_case = LoginUseCase::new(Arc::new(user_repository));
+        let dto = dtos::LoginRequest{
+            email: "email".to_string(),
+            password: "password".to_string(),
+        };
+
+        //Act
+        let result = use_case.execute(dto).await;
+
+        //Assert
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn given_request_with_invalid_email_when_executing_then_not_registered_email_error_is_returned(){
+        //Arrange
+        let mut user_repository = MockIUserRepository::new();
+        user_repository
+            .expect_find_by_email()
+            .returning(|_| Ok(None));
+
+        let use_case = LoginUseCase::new(Arc::new(user_repository));
+        let dto = dtos::LoginRequest{
+            email: "invalid_email".to_string(),
+            password: "password".to_string(),
+        };
+
+        //Act
+        let result = use_case.execute(dto.clone()).await;
+
+        //Assert
+        assert!(result.is_err());
+        match result {
+            Err(AppError::NotRegisteredEmail(message)) => assert_eq!(message, dto.email.clone()),
+            _ => assert_eq!(true, false),
+        }
+    }
+
+        #[tokio::test]
+    async fn given_request_with_bad_password_when_executing_then_bad_password_error_is_returned(){
+            //Arrange
+            let mut user_repository = MockIUserRepository::new();
+            user_repository
+                .expect_find_by_email()
+                .returning(|_| Ok(Some(User::new(
+                    "name".to_string(),
+                    "email".to_string(),
+                    bcrypt::hash("password".to_string(), 12).unwrap()
+                ))));
+
+            let use_case = LoginUseCase::new(Arc::new(user_repository));
+            let dto = dtos::LoginRequest{
+                email: "email".to_string(),
+                password: "another_password".to_string(),
+            };
+
+            //Act
+            let result = use_case.execute(dto.clone()).await;
+
+            //Assert
+            assert!(result.is_err());
+            match result {
+                Err(AppError::BadPassword()) => assert_eq!(true, true),
+                _ => assert_eq!(true, false),
+            }
+    }
+
+    #[tokio::test]
+    async fn given_any_request_when_executing_then_unexpected_error_is_returned(){
+        //Arrange
+        let mut user_repository = MockIUserRepository::new();
+        user_repository
+            .expect_find_by_email()
+            .returning(|_| Err(anyhow!("Unexpected_error")));
+
+        let use_case = LoginUseCase::new(Arc::new(user_repository));
+        let dto = dtos::LoginRequest{
+            email: "email".to_string(),
+            password: "password".to_string(),
+        };
+
+        //Act
+        let result = use_case.execute(dto.clone()).await;
+
+        //Assert
+        assert!(result.is_err());
+        match result {
+            Err(_) => assert_eq!(true, true),
+            _ => assert_eq!(true, false),
+        }
+
     }
 }
