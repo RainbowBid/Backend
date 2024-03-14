@@ -1,3 +1,4 @@
+use application::use_cases::get_user_use_case::GetUserUseCase;
 use application::use_cases::login_use_case::LoginUseCase;
 use application::use_cases::register_use_case::RegisterUseCase;
 use domain::entities::user::User;
@@ -9,6 +10,7 @@ use std::sync::Arc;
 pub struct Modules {
     pub(crate) register_use_case: RegisterUseCase<DatabaseRepositoryImpl<User>>,
     pub(crate) login_use_case: LoginUseCase<DatabaseRepositoryImpl<User>>,
+    pub(crate) get_user_use_case: GetUserUseCase<DatabaseRepositoryImpl<User>>,
 }
 
 impl Modules {
@@ -19,9 +21,12 @@ impl Modules {
 
         let login_use_case = LoginUseCase::new(user_repository.clone());
 
+        let get_user_use_case = GetUserUseCase::new(user_repository.clone());
+
         Self {
             register_use_case,
             login_use_case,
+            get_user_use_case,
         }
     }
 }

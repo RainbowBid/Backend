@@ -5,13 +5,16 @@ use async_trait::async_trait;
 use domain::entities::user::User;
 use domain::id::Id;
 use domain::interfaces::i_user_repository::IUserRepository;
+use sqlx::types::Uuid;
 
 #[async_trait]
 impl IUserRepository for DatabaseRepositoryImpl<User> {
     async fn find(&self, id: Id<User>) -> anyhow::Result<Option<User>> {
         let pool = self.pool.0.clone();
+        let id = Uuid::parse_str(id.value.to_string().as_str()).map_err(|e| anyhow!("{:?}", e))?;
+
         let result = sqlx::query_as::<_, UserModel>("SELECT * FROM users WHERE id = $1")
-            .bind(id.to_string())
+            .bind(id)
             .fetch_optional(pool.as_ref())
             .await
             .map_err(|e| anyhow!("{:?}", e))?;
