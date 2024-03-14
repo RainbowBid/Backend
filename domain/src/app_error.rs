@@ -19,6 +19,8 @@ pub enum AppError {
     InvalidJwt(),
     #[error("User with id {0} not found")]
     UserNotFound(String),
+    #[error("Internal server error")]
+    InternalServerError(),
 }
 
 impl IntoResponse for AppError {
@@ -41,6 +43,7 @@ impl IntoResponse for AppError {
             AppError::BadPassword() => (StatusCode::UNAUTHORIZED, error_message).into_response(),
             AppError::InvalidJwt() => (StatusCode::UNAUTHORIZED, error_message).into_response(),
             AppError::UserNotFound(_) => (StatusCode::NOT_FOUND, error_message).into_response(),
+            AppError::InternalServerError() => (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response(),
         }
     }
 }
