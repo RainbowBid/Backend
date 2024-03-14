@@ -1,6 +1,6 @@
+use domain::entities::item::Item;
 use sqlx::types::Uuid;
 use sqlx::FromRow;
-use domain::entities::item::Item;
 
 #[derive(FromRow)]
 pub struct ItemModel {

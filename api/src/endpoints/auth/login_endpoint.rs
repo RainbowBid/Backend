@@ -1,5 +1,5 @@
 use crate::di::AppState;
-use application::use_cases::login_use_case::dtos::LoginRequest;
+use application::use_cases::user::login_use_case::dtos::LoginRequest;
 use axum::extract::State;
 use axum::response::{IntoResponse, Response};
 use axum::Json;

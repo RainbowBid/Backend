@@ -16,3 +16,4 @@ tracing = "0.1.40"
 fancy-regex = "0.13.0"
 mockall = "0.12.1"
 bcrypt = "0.15.0"
+uuid = { version = "1.7.0", features = ["v4"] }

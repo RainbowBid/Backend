@@ -1,6 +1,6 @@
-use application::use_cases::get_user_use_case::GetUserUseCase;
-use application::use_cases::login_use_case::LoginUseCase;
-use application::use_cases::register_use_case::RegisterUseCase;
+use application::use_cases::user::get_user_use_case::GetUserUseCase;
+use application::use_cases::user::login_use_case::LoginUseCase;
+use application::use_cases::user::register_use_case::RegisterUseCase;
 use domain::entities::user::User;
 use infrastructure::repositories::DatabaseRepositoryImpl;
 use shuttle_secrets::SecretStore;
