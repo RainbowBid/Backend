@@ -1,5 +1,6 @@
 mod di;
 mod endpoints;
+mod middleware;
 mod routes;
 
 use crate::routes::init_router;
