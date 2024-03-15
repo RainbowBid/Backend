@@ -1,13 +1,13 @@
+use application::use_cases::get_items_use_case::GetItemsUseCase;
 use application::use_cases::get_user_use_case::GetUserUseCase;
 use application::use_cases::login_use_case::LoginUseCase;
 use application::use_cases::register_use_case::RegisterUseCase;
+use domain::entities::item::Item;
 use domain::entities::user::User;
 use infrastructure::repositories::DatabaseRepositoryImpl;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 use std::sync::Arc;
-use application::use_cases::get_items_use_case::GetItemsUseCase;
-use domain::entities::item::Item;
 
 pub struct Modules {
     pub(crate) register_use_case: RegisterUseCase<DatabaseRepositoryImpl<User>>,
@@ -18,9 +18,9 @@ pub struct Modules {
 
 impl Modules {
     pub fn new(db: PgPool) -> Self {
-        let user_repository = Arc::new(DatabaseRepositoryImpl::new(db));
+        let user_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
-        let item_repository = Arc::new(DatabaseRepositoryImpl::new(db));
+        let item_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
         let register_use_case = RegisterUseCase::new(user_repository.clone());
 

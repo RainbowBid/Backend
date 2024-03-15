@@ -1,5 +1,6 @@
 use crate::entities::user::User;
 use crate::id::Id;
+use serde::Serialize;
 
 #[derive(Debug, Clone)]
 pub struct Item {
@@ -21,4 +22,3 @@ impl Item {
         }
     }
 }
-

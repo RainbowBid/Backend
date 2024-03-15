@@ -1,19 +1,19 @@
 use axum::extract::State;
-use axum::Json;
 use axum::response::IntoResponse;
-use axum_valid::Valid;
-use application::use_cases::get_items_use_case::dtos::GetAllItemsByUserIdRequest;
-use domain::app_error::AppError;
+use axum::Extension;
+
 use crate::di::AppState;
+use domain::app_error::AppError;
+use domain::entities::user::User;
 
 pub async fn handle(
     State(state): State<AppState>,
-    Valid(Json(request)): Valid<Json<GetAllItemsByUserIdRequest>>,
-) -> Result <impl IntoResponse, AppError>{
+    Extension(user): Extension<User>,
+) -> Result<impl IntoResponse, AppError> {
     let response = state
         .modules
         .get_items_use_case
-        .execute(request.user_id)
+        .execute(user.id.to_string())
         .await;
     Ok(response)
 }
