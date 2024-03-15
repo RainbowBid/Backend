@@ -64,8 +64,15 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
         )
         .route("/login", post(endpoints::auth::login_endpoint::handle));
 
+    let item_router = Router::new().route(
+        "/all",
+        get(endpoints::items::get_items_endpoint::handle)
+            .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+    );
+
     Router::new()
         .nest("/auth", auth_router)
+        .nest("/items", item_router)
         .with_state(app_state)
         .layer(cors)
 }
