@@ -9,6 +9,7 @@ pub struct ItemModel {
     pub description: String,
     pub picture: Vec<u8>,
     pub user_id: Uuid,
+    pub category: String,
 }
 
 impl TryFrom<ItemModel> for Item {
@@ -21,6 +22,7 @@ impl TryFrom<ItemModel> for Item {
             description: item_table.description,
             picture: item_table.picture,
             user_id: item_table.user_id.to_string().try_into()?,
+            category: item_table.category.into(),
         })
     }
 }
@@ -35,6 +37,7 @@ impl TryFrom<Item> for ItemModel {
             description: item.description,
             picture: item.picture,
             user_id: Uuid::parse_str(&item.user_id.to_string())?,
+            category: item.category.into(),
         })
     }
 }
