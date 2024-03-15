@@ -57,7 +57,7 @@ impl<R: IUserRepository> LoginUseCase<R> {
     pub async fn execute(&self, dto: dtos::LoginRequest) -> Result<User, AppError> {
         info!("Logging user with email: {}", dto.email);
 
-        // check wheather the email is registered AND the password matches the hash.
+        // check whether the email is registered AND the password matches the hash.
         let user: User = match self.user_repository.find_by_email(dto.email.clone()).await {
             Ok(Some(user)) => user,
             Err(e) => {

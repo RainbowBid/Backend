@@ -6,16 +6,21 @@ use infrastructure::repositories::DatabaseRepositoryImpl;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 use std::sync::Arc;
+use application::use_cases::get_items_use_case::GetItemsUseCase;
+use domain::entities::item::Item;
 
 pub struct Modules {
     pub(crate) register_use_case: RegisterUseCase<DatabaseRepositoryImpl<User>>,
     pub(crate) login_use_case: LoginUseCase<DatabaseRepositoryImpl<User>>,
     pub(crate) get_user_use_case: GetUserUseCase<DatabaseRepositoryImpl<User>>,
+    pub(crate) get_items_use_case: GetItemsUseCase<DatabaseRepositoryImpl<Item>>,
 }
 
 impl Modules {
     pub fn new(db: PgPool) -> Self {
         let user_repository = Arc::new(DatabaseRepositoryImpl::new(db));
+
+        let item_repository = Arc::new(DatabaseRepositoryImpl::new(db));
 
         let register_use_case = RegisterUseCase::new(user_repository.clone());
 
@@ -23,10 +28,12 @@ impl Modules {
 
         let get_user_use_case = GetUserUseCase::new(user_repository.clone());
 
+        let get_items_use_case = GetItemsUseCase::new(item_repository.clone());
         Self {
             register_use_case,
             login_use_case,
             get_user_use_case,
+            get_items_use_case,
         }
     }
 }

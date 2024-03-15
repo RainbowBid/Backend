@@ -6,6 +6,17 @@ use domain::entities::item::Item;
 use domain::id::Id;
 use domain::interfaces::i_item_repository::IItemRepository;
 
+
+pub mod dtos {
+    use serde::Deserialize;
+    use validator::Validate;
+
+    #[derive(Deserialize, Debug, Validate, Clone)]
+    pub struct GetAllItemsByUserIdRequest {
+        #[validate(length(min = 1, max = 1000, message = "Can't be empty"))]
+        pub user_id: String,
+    }
+}
 pub struct GetItemsUseCase<R: IItemRepository>{
     item_repository: Arc<R>,
 }
