@@ -28,6 +28,7 @@ pub mod dtos {
         pub id: String,
         pub brief: String,
         pub description: String,
+        pub category: String,
         pub user_id: String,
     }
 
@@ -38,6 +39,7 @@ pub mod dtos {
                 brief: value.brief,
                 description: value.description,
                 id: value.id.to_string(),
+                category: value.category.into(),
             }
         }
     }
