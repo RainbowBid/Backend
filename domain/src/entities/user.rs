@@ -1,6 +1,6 @@
 use crate::id::Id;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct User {
     pub id: Id<User>,
     pub name: String,

@@ -10,7 +10,7 @@ pub enum AppError {
     #[error("Email {0} already exists")]
     EmailAlreadyExists(String),
     #[error("User registration failed")]
-    UserRegistrationFailed(#[from] anyhow::Error),
+    UserRegistrationFailed(#[source] anyhow::Error),
     #[error("Email {0} is not registered.")]
     NotRegisteredEmail(String),
     #[error("User login failed. Bad password.")]
@@ -21,6 +21,14 @@ pub enum AppError {
     UserNotFound(String),
     #[error("Internal server error")]
     InternalServerError(),
+    #[error("Failed to create a new item")]
+    CreateItemFailed(#[source] anyhow::Error),
+    #[error("Invalid request: {0}")]
+    InvalidRequest(#[from] validator::ValidationErrors),
+    #[error("Failed to get image for item with id {0}")]
+    GetItemImageFailed(#[source] anyhow::Error),
+    #[error("Item {0} does not belong to user {1}")]
+    ItemDoesNotBelongToUser(String, String),
 }
 
 impl IntoResponse for AppError {
@@ -45,6 +53,16 @@ impl IntoResponse for AppError {
             AppError::UserNotFound(_) => (StatusCode::NOT_FOUND, error_message).into_response(),
             AppError::InternalServerError() => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::CreateItemFailed(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::InvalidRequest(_) => (StatusCode::BAD_REQUEST, error_message).into_response(),
+            AppError::GetItemImageFailed(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::ItemDoesNotBelongToUser(_, _) => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
             }
         }
     }

@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use domain::app_error::AppError;
 use domain::entities::user::User;
 use domain::interfaces::i_user_repository::IUserRepository;
@@ -60,20 +59,19 @@ impl<R: IUserRepository> LoginUseCase<R> {
         // check whether the email is registered AND the password matches the hash.
         let user: User = match self.user_repository.find_by_email(dto.email.clone()).await {
             Ok(Some(user)) => user,
-            Err(e) => {
-                error!("Failed to find user by email: {:?}", e);
-                Err(e)?
-            }
             _ => {
                 error!("Email {} is not registered.", dto.email);
                 return Err(AppError::NotRegisteredEmail(dto.email.clone()));
             }
         };
 
-        match bcrypt::verify(dto.password.clone(), user.password.as_str()).map_err(|_| {
-            error!("Failed to hash password");
-            anyhow!("Failed to hash password")
-        })? {
+        let login_result =
+            bcrypt::verify(dto.password.clone(), user.password.as_str()).map_err(|_| {
+                error!("Failed to hash password");
+                AppError::BadPassword()
+            })?;
+
+        match login_result {
             true => {
                 info!("Login succeeded!");
             }
@@ -89,7 +87,7 @@ impl<R: IUserRepository> LoginUseCase<R> {
 
 #[cfg(test)]
 mod tests {
-    use crate::use_cases::login_use_case::{dtos, LoginUseCase};
+    use crate::use_cases::user::login_use_case::{dtos, LoginUseCase};
     use anyhow::anyhow;
     use domain::app_error::AppError;
     use domain::entities::user::User;
@@ -104,7 +102,7 @@ mod tests {
         let user = User::new(
             "name".to_string(),
             "email".to_string(),
-            bcrypt::hash("password".to_string(), 12).unwrap(),
+            bcrypt::hash("password", 12).unwrap(),
         );
         user_repository
             .expect_find_by_email()

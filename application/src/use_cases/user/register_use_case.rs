@@ -74,7 +74,9 @@ impl<R: IUserRepository> RegisterUseCase<R> {
             }
             Err(e) => {
                 error!("Failed to find user by username: {:?}", e);
-                Err(e)?
+                Err(AppError::UserRegistrationFailed(anyhow!(
+                    "Failed to find user by username"
+                )))?
             }
             _ => {}
         }
@@ -82,11 +84,13 @@ impl<R: IUserRepository> RegisterUseCase<R> {
         match self.user_repository.find_by_email(dto.email.clone()).await {
             Ok(Some(_)) => {
                 error!("Email {} already exists", dto.email);
-                return Err(AppError::EmailAlreadyExists(dto.email.clone()));
+                Err(AppError::EmailAlreadyExists(dto.email.clone()))?
             }
             Err(e) => {
                 error!("Failed to find user by email: {:?}", e);
-                Err(e)?
+                Err(AppError::UserRegistrationFailed(anyhow!(
+                    "Failed to find user by email"
+                )))?
             }
             _ => {}
         }
@@ -94,12 +98,15 @@ impl<R: IUserRepository> RegisterUseCase<R> {
         // hash password
         let hashed_password = bcrypt::hash(dto.password.clone(), 12).map_err(|_| {
             error!("Failed to hash password");
-            anyhow!("Failed to hash password")
+            AppError::UserRegistrationFailed(anyhow!("Failed to hash password"))
         })?;
 
         // create user account
         let user = User::new(dto.name, dto.email, hashed_password);
-        self.user_repository.insert(user).await?;
+        self.user_repository.insert(user).await.map_err(|e| {
+            error!("Failed to insert user: {:?}", e);
+            AppError::UserRegistrationFailed(anyhow!("Failed to insert user"))
+        })?;
         info!("User registered successfully");
 
         Ok(())
