@@ -6,11 +6,8 @@ use axum::http::header::{
     ACCESS_CONTROL_REQUEST_METHOD, AUTHORIZATION, CONTENT_TYPE, ORIGIN,
 };
 use axum::http::{HeaderValue, Method};
-use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use axum::{middleware, Extension, Router};
-use domain::app_error::AppError;
-use domain::entities::user::User;
+use axum::{middleware, Router};
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 use tower_http::cors::CorsLayer;
@@ -55,21 +52,26 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
 
     let auth_router = Router::new()
         .route(
-            "/demo",
-            get(demo_handle).route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
-        )
-        .route(
             "/register",
             post(endpoints::auth::register_endpoint::handle),
         )
         .route("/login", post(endpoints::auth::login_endpoint::handle));
 
+    let item_router = Router::new()
+        .route(
+            "/create",
+            post(endpoints::item::create_endpoint::handle)
+                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+        )
+        .route(
+            "/:id/image",
+            get(endpoints::item::get_image_endpoint::handle)
+                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+        );
+
     Router::new()
         .nest("/auth", auth_router)
+        .nest("/items", item_router)
         .with_state(app_state)
         .layer(cors)
-}
-
-async fn demo_handle(Extension(user): Extension<User>) -> Result<impl IntoResponse, AppError> {
-    Ok(format!("Hello, {}!", user.name))
 }

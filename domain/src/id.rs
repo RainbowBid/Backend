@@ -1,7 +1,7 @@
 use derive_new::new;
 use uuid::Uuid;
 
-#[derive(new, Debug, Clone, Copy)]
+#[derive(new, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Id<T> {
     pub value: Uuid,
     _marker: std::marker::PhantomData<T>,
