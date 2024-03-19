@@ -19,11 +19,13 @@ pub enum AppError {
     InvalidJwt(),
     #[error("User with id {0} not found")]
     UserNotFound(String),
-    #[error("Failed to create a new item")]
+    #[error("Internal server error")]
+    InternalServerError(),
+    #[error("Failed to create a new items")]
     CreateItemFailed(#[source] anyhow::Error),
     #[error("Invalid request: {0}")]
     InvalidRequest(#[from] validator::ValidationErrors),
-    #[error("Failed to get image for item with id {0}")]
+    #[error("Failed to get image for items with id {0}")]
     GetItemImageFailed(#[source] anyhow::Error),
     #[error("Item {0} does not belong to user {1}")]
     ItemDoesNotBelongToUser(String, String),
@@ -49,6 +51,9 @@ impl IntoResponse for AppError {
             AppError::BadPassword() => (StatusCode::UNAUTHORIZED, error_message).into_response(),
             AppError::InvalidJwt() => (StatusCode::UNAUTHORIZED, error_message).into_response(),
             AppError::UserNotFound(_) => (StatusCode::NOT_FOUND, error_message).into_response(),
+            AppError::InternalServerError() => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
             AppError::CreateItemFailed(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
             }

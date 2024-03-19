@@ -60,14 +60,18 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
     let item_router = Router::new()
         .route(
             "/create",
-            post(endpoints::item::create_endpoint::handle)
+            post(endpoints::items::create_endpoint::handle)
                 .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
         )
         .route(
             "/:id/image",
-            get(endpoints::item::get_image_endpoint::handle)
+            get(endpoints::items::get_image_endpoint::handle)
                 .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
-        );
+        ).route(
+        "/all",
+        get(endpoints::items::get_items_endpoint::handle)
+            .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+    );
 
     Router::new()
         .nest("/auth", auth_router)

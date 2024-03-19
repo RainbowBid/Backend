@@ -1,4 +1,4 @@
-mod item_repository;
+pub mod item_repository;
 pub mod user_repository;
 
 use crate::db::Db;

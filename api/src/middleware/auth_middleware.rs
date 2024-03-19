@@ -14,7 +14,7 @@ pub async fn auth(
     mut req: Request,
     next: Next,
 ) -> Result<impl IntoResponse, AppError> {
-    info!("Validating JWT");
+    info!("Authentication data check.");
 
     let auth_header = req
         .headers()

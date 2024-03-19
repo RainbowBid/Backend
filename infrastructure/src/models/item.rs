@@ -2,7 +2,7 @@ use domain::entities::item::Item;
 use sqlx::types::Uuid;
 use sqlx::FromRow;
 
-#[derive(FromRow)]
+#[derive(FromRow, Debug)]
 pub struct ItemModel {
     pub id: Uuid,
     pub brief: String,

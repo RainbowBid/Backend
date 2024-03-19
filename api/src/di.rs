@@ -1,14 +1,17 @@
-use application::use_cases::item::create_item_use_case::CreateItemUseCase;
-use application::use_cases::item::get_item_image_use_case::GetItemImageUseCase;
+use std::sync::Arc;
+
+use shuttle_secrets::SecretStore;
+use sqlx::PgPool;
+
+use application::use_cases::items::create_item_use_case::CreateItemUseCase;
+use application::use_cases::items::get_item_image_use_case::GetItemImageUseCase;
+use application::use_cases::items::get_items_use_case::GetItemsUseCase;
 use application::use_cases::user::get_user_use_case::GetUserUseCase;
 use application::use_cases::user::login_use_case::LoginUseCase;
 use application::use_cases::user::register_use_case::RegisterUseCase;
 use domain::entities::item::Item;
 use domain::entities::user::User;
 use infrastructure::repositories::DatabaseRepositoryImpl;
-use shuttle_secrets::SecretStore;
-use sqlx::PgPool;
-use std::sync::Arc;
 
 pub struct Modules {
     pub(crate) register_use_case: RegisterUseCase<DatabaseRepositoryImpl<User>>,
@@ -16,19 +19,22 @@ pub struct Modules {
     pub(crate) get_user_use_case: GetUserUseCase<DatabaseRepositoryImpl<User>>,
     pub(crate) create_item_use_case: CreateItemUseCase<DatabaseRepositoryImpl<Item>>,
     pub(crate) get_item_image_use_case: GetItemImageUseCase<DatabaseRepositoryImpl<Item>>,
+    pub(crate) get_items_use_case: GetItemsUseCase<DatabaseRepositoryImpl<Item>>,
 }
 
 impl Modules {
     pub fn new(db: PgPool) -> Self {
         let user_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
-        let item_repository = Arc::new(DatabaseRepositoryImpl::new(db));
+        let item_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
         let register_use_case = RegisterUseCase::new(user_repository.clone());
 
         let login_use_case = LoginUseCase::new(user_repository.clone());
 
         let get_user_use_case = GetUserUseCase::new(user_repository.clone());
+
+        let get_items_use_case = GetItemsUseCase::new(item_repository.clone());
 
         let create_item_use_case = CreateItemUseCase::new(item_repository.clone());
 
@@ -38,6 +44,7 @@ impl Modules {
             register_use_case,
             login_use_case,
             get_user_use_case,
+            get_items_use_case,
             create_item_use_case,
             get_item_image_use_case,
         }

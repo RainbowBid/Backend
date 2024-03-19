@@ -1,5 +1,5 @@
 use crate::di::AppState;
-use application::use_cases::item::create_item_use_case::dtos::CreateItemRequest;
+use application::use_cases::items::create_item_use_case::dtos::CreateItemRequest;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
