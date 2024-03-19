@@ -17,7 +17,7 @@ impl<R: IItemRepository> GetItemImageUseCase<R> {
     }
 
     pub async fn execute(&self, current_user: User, item_id: String) -> Result<Vec<u8>, AppError> {
-        info!("Getting image for item with id: {}", item_id);
+        info!("Getting image for items with id: {}", item_id);
 
         let id = Id::<Item>::try_from(item_id.clone()).map_err(|_| {
             AppError::GetItemImageFailed(anyhow!("Cannot assign invalid item_id to get image"))
@@ -51,7 +51,7 @@ impl<R: IItemRepository> GetItemImageUseCase<R> {
 
 #[cfg(test)]
 mod tests {
-    use crate::use_cases::item::get_item_image_use_case::GetItemImageUseCase;
+    use crate::use_cases::items::get_item_image_use_case::GetItemImageUseCase;
     use domain::app_error::AppError;
     use domain::entities::item::{Category, Item};
     use domain::interfaces::i_item_repository::MockIItemRepository;

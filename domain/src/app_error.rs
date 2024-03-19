@@ -21,11 +21,11 @@ pub enum AppError {
     UserNotFound(String),
     #[error("Internal server error")]
     InternalServerError(),
-    #[error("Failed to create a new item")]
+    #[error("Failed to create a new items")]
     CreateItemFailed(#[source] anyhow::Error),
     #[error("Invalid request: {0}")]
     InvalidRequest(#[from] validator::ValidationErrors),
-    #[error("Failed to get image for item with id {0}")]
+    #[error("Failed to get image for items with id {0}")]
     GetItemImageFailed(#[source] anyhow::Error),
     #[error("Item {0} does not belong to user {1}")]
     ItemDoesNotBelongToUser(String, String),

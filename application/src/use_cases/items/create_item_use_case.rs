@@ -68,7 +68,7 @@ pub mod dtos {
                 picture,
                 Id::try_from(dto.user_id.unwrap_or_default().clone()).map_err(|_| {
                     AppError::CreateItemFailed(anyhow!(
-                        "Cannot assign invalid user_id to newly created item"
+                        "Cannot assign invalid user_id to newly created items"
                     ))
                 })?,
                 dto.category.into(),
@@ -91,7 +91,7 @@ impl<R: IItemRepository> CreateItemUseCase<R> {
         current_user: User,
         dto: dtos::CreateItemRequest,
     ) -> Result<(), AppError> {
-        info!("Creating item with brief: {}", dto.brief);
+        info!("Creating items with brief: {}", dto.brief);
 
         let dto = dtos::CreateItemRequest {
             user_id: Some(current_user.id.to_string()),
@@ -105,8 +105,8 @@ impl<R: IItemRepository> CreateItemUseCase<R> {
                 Ok(())
             }
             _ => {
-                error!("Failed to create item");
-                Err(AppError::CreateItemFailed(anyhow!("Failed to create item")))
+                error!("Failed to create items");
+                Err(AppError::CreateItemFailed(anyhow!("Failed to create items")))
             }
         }
     }
@@ -114,7 +114,7 @@ impl<R: IItemRepository> CreateItemUseCase<R> {
 
 #[cfg(test)]
 mod tests {
-    use crate::use_cases::item::create_item_use_case::{dtos, CreateItemUseCase};
+    use crate::use_cases::items::create_item_use_case::{dtos, CreateItemUseCase};
     use domain::app_error::AppError::CreateItemFailed;
     use domain::entities::item::{Category, Item};
     use domain::id::Id;

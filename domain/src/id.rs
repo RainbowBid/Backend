@@ -1,5 +1,4 @@
 use derive_new::new;
-use serde::Serialize;
 use uuid::Uuid;
 
 #[derive(new, Debug, Clone, Copy, Eq, PartialEq, Hash)]

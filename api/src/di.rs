@@ -3,14 +3,13 @@ use std::sync::Arc;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 
-use application::use_cases::get_user_use_case::GetUserUseCase;
-use application::use_cases::item::create_item_use_case::CreateItemUseCase;
-use application::use_cases::item::get_item_image_use_case::GetItemImageUseCase;
-use application::use_cases::login_use_case::LoginUseCase;
-use application::use_cases::register_use_case::RegisterUseCase;
+use application::use_cases::items::create_item_use_case::CreateItemUseCase;
+use application::use_cases::items::get_item_image_use_case::GetItemImageUseCase;
+use application::use_cases::items::get_items_use_case::GetItemsUseCase;
 use application::use_cases::user::get_user_use_case::GetUserUseCase;
 use application::use_cases::user::login_use_case::LoginUseCase;
 use application::use_cases::user::register_use_case::RegisterUseCase;
+use domain::entities::item::Item;
 use domain::entities::user::User;
 use infrastructure::repositories::DatabaseRepositoryImpl;
 
@@ -27,9 +26,6 @@ impl Modules {
     pub fn new(db: PgPool) -> Self {
         let user_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
-        let item_repository = Arc::new(DatabaseRepositoryImpl::new(db));
-        let user_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
-
         let item_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
         let register_use_case = RegisterUseCase::new(user_repository.clone());
@@ -39,6 +35,7 @@ impl Modules {
         let get_user_use_case = GetUserUseCase::new(user_repository.clone());
 
         let get_items_use_case = GetItemsUseCase::new(item_repository.clone());
+
         let create_item_use_case = CreateItemUseCase::new(item_repository.clone());
 
         let get_item_image_use_case = GetItemImageUseCase::new(item_repository.clone());
