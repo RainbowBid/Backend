@@ -106,7 +106,9 @@ impl<R: IItemRepository> CreateItemUseCase<R> {
             }
             _ => {
                 error!("Failed to create items");
-                Err(AppError::CreateItemFailed(anyhow!("Failed to create items")))
+                Err(AppError::CreateItemFailed(anyhow!(
+                    "Failed to create items"
+                )))
             }
         }
     }

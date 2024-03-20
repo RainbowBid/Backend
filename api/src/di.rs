@@ -5,6 +5,7 @@ use sqlx::PgPool;
 
 use application::use_cases::items::create_item_use_case::CreateItemUseCase;
 use application::use_cases::items::get_item_image_use_case::GetItemImageUseCase;
+use application::use_cases::items::get_item_use_case::GetItemUseCase;
 use application::use_cases::items::get_items_use_case::GetItemsUseCase;
 use application::use_cases::user::get_user_use_case::GetUserUseCase;
 use application::use_cases::user::login_use_case::LoginUseCase;
@@ -20,6 +21,7 @@ pub struct Modules {
     pub(crate) create_item_use_case: CreateItemUseCase<DatabaseRepositoryImpl<Item>>,
     pub(crate) get_item_image_use_case: GetItemImageUseCase<DatabaseRepositoryImpl<Item>>,
     pub(crate) get_items_use_case: GetItemsUseCase<DatabaseRepositoryImpl<Item>>,
+    pub(crate) get_item_use_case: GetItemUseCase<DatabaseRepositoryImpl<Item>>,
 }
 
 impl Modules {
@@ -40,6 +42,8 @@ impl Modules {
 
         let get_item_image_use_case = GetItemImageUseCase::new(item_repository.clone());
 
+        let get_item_use_case = GetItemUseCase::new(item_repository.clone());
+
         Self {
             register_use_case,
             login_use_case,
@@ -47,6 +51,7 @@ impl Modules {
             get_items_use_case,
             create_item_use_case,
             get_item_image_use_case,
+            get_item_use_case,
         }
     }
 }
