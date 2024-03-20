@@ -14,17 +14,21 @@ pub mod dtos {
     use domain::entities::auction::Auction;
     use domain::id::Id;
     use serde::Deserialize;
+    use std::time::SystemTime;
     use validator::{Validate, ValidationError};
 
-    fn validate_end_date(end_date: &DateTime<Utc>) -> Result<(), ValidationError> {
-        let now = Utc::now();
-        if *end_date < now + chrono::Duration::minutes(1) {
-            return Err(ValidationError::new(
-                "End date must be at least 1 minute in the future",
-            ));
+    fn validate_end_date(end_date: &i64) -> Result<(), ValidationError> {
+        if let Some(end_date) = DateTime::<Utc>::from_timestamp_millis(*end_date) {
+            if end_date > Utc::now() + chrono::Duration::minutes(1) {
+                Ok(())
+            } else {
+                Err(ValidationError::new(
+                    "End date must be at least 1 minute in the future",
+                ))
+            }
+        } else {
+            Err(ValidationError::new("Invalid end date"))
         }
-
-        Ok(())
     }
 
     #[derive(Deserialize, Debug, Validate)]
@@ -36,7 +40,7 @@ pub mod dtos {
             function = "validate_end_date",
             message = "End date must be at least 1 minute in the future"
         ))]
-        pub end_date: DateTime<Utc>,
+        pub end_date: i64,
     }
 
     impl TryFrom<CreateAuctionRequest> for Auction {
@@ -50,7 +54,8 @@ pub mod dtos {
                     ))
                 })?,
                 dto.starting_price,
-                dto.end_date,
+                DateTime::<Utc>::from_timestamp_millis(dto.end_date)
+                    .unwrap_or(DateTime::<Utc>::from(SystemTime::now())),
             ))
         }
     }
@@ -135,6 +140,7 @@ impl<R1: IAuctionRepository, R2: IItemRepository> CreateAuctionUseCase<R1, R2> {
 #[cfg(test)]
 mod tests {
     use crate::use_cases::auctions::create_auction_use_case::{dtos, CreateAuctionUseCase};
+    use anyhow::anyhow;
     use chrono::Utc;
     use domain::entities::auction::Auction;
     use domain::entities::item::{Category, Item};
@@ -143,7 +149,7 @@ mod tests {
     use domain::interfaces::i_auction_repository::MockIAuctionRepository;
     use domain::interfaces::i_item_repository::MockIItemRepository;
     use std::sync::Arc;
-    use anyhow::anyhow;
+    use std::time::SystemTime;
     use uuid::Uuid;
 
     #[tokio::test]
@@ -202,7 +208,7 @@ mod tests {
         let dto = dtos::CreateAuctionRequest {
             item_id: item_id.to_string(),
             starting_price: 0.0,
-            end_date: Utc::now() + chrono::Duration::minutes(10),
+            end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
         };
 
         // Act
@@ -213,7 +219,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn given_invalid_dto_for_non_existing_item_when_executing_then_cannot_create_auction_for_non_existing_item_is_returned() {
+    async fn given_invalid_dto_for_non_existing_item_when_executing_then_cannot_create_auction_for_non_existing_item_is_returned(
+    ) {
         // Arrange
         let current_user = User::new(
             "username".to_string(),
@@ -225,16 +232,17 @@ mod tests {
 
         let mut item_repository = MockIItemRepository::new();
 
-        item_repository
-            .expect_find()
-            .returning(|_| Ok(None));
+        item_repository.expect_find().returning(|_| Ok(None));
 
-        let use_case = CreateAuctionUseCase::new(Arc::new(MockIAuctionRepository::new()), Arc::new(item_repository));
+        let use_case = CreateAuctionUseCase::new(
+            Arc::new(MockIAuctionRepository::new()),
+            Arc::new(item_repository),
+        );
 
         let dto = dtos::CreateAuctionRequest {
             item_id: item_id.to_string(),
             starting_price: 0.0,
-            end_date: Utc::now() + chrono::Duration::minutes(10),
+            end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
         };
 
         // Act
@@ -250,7 +258,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn given_invalid_dto_for_item_that_does_not_belong_to_current_user_when_executing_then_cannot_create_auction_for_item_that_does_not_belong_to_current_user_is_returned() {
+    async fn given_invalid_dto_for_item_that_does_not_belong_to_current_user_when_executing_then_cannot_create_auction_for_item_that_does_not_belong_to_current_user_is_returned(
+    ) {
         // Arrange
         let current_user = User::new(
             "username".to_string(),
@@ -263,24 +272,25 @@ mod tests {
 
         let mut item_repository = MockIItemRepository::new();
 
-        item_repository
-            .expect_find()
-            .returning(move |_| {
-                Ok(Some(Item::new(
-                    "brief".to_string(),
-                    "description".to_string(),
-                    vec![0],
-                    Id::try_from(user_id.to_string()).unwrap(),
-                    Category::Electronics,
-                )))
-            });
+        item_repository.expect_find().returning(move |_| {
+            Ok(Some(Item::new(
+                "brief".to_string(),
+                "description".to_string(),
+                vec![0],
+                Id::try_from(user_id.to_string()).unwrap(),
+                Category::Electronics,
+            )))
+        });
 
-        let use_case = CreateAuctionUseCase::new(Arc::new(MockIAuctionRepository::new()), Arc::new(item_repository));
+        let use_case = CreateAuctionUseCase::new(
+            Arc::new(MockIAuctionRepository::new()),
+            Arc::new(item_repository),
+        );
 
         let dto = dtos::CreateAuctionRequest {
             item_id: item_id.to_string(),
             starting_price: 0.0,
-            end_date: Utc::now() + chrono::Duration::minutes(10),
+            end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
         };
 
         // Act
@@ -297,7 +307,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn given_invalid_dto_for_item_with_ongoing_auction_when_executing_then_cannot_create_auction_for_item_with_ongoing_auction_is_returned() {
+    async fn given_invalid_dto_for_item_with_ongoing_auction_when_executing_then_cannot_create_auction_for_item_with_ongoing_auction_is_returned(
+    ) {
         // Arrange
         let current_user = User::new(
             "username".to_string(),
@@ -331,11 +342,13 @@ mod tests {
         auction_repository
             .expect_find_ongoing_by_item_id()
             .withf(move |id| id.value == item_id_clone)
-            .returning(move |_| Ok(Some(Auction::new(
-                Id::try_from(item_id_clone.to_string()).unwrap(),
-                0.0,
-                Utc::now() + chrono::Duration::minutes(10),
-            ))));
+            .returning(move |_| {
+                Ok(Some(Auction::new(
+                    Id::try_from(item_id_clone.to_string()).unwrap(),
+                    0.0,
+                    Utc::now() + chrono::Duration::minutes(10),
+                )))
+            });
 
         let use_case =
             CreateAuctionUseCase::new(Arc::new(auction_repository), Arc::new(item_repository));
@@ -343,7 +356,7 @@ mod tests {
         let dto = dtos::CreateAuctionRequest {
             item_id: item_id.to_string(),
             starting_price: 0.0,
-            end_date: Utc::now() + chrono::Duration::minutes(10),
+            end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
         };
 
         // Act
@@ -351,7 +364,9 @@ mod tests {
 
         // Assert
         match result {
-            Err(domain::app_error::AppError::CannotCreateAuctionForItemWithOngoingAuction(item_id)) => {
+            Err(domain::app_error::AppError::CannotCreateAuctionForItemWithOngoingAuction(
+                item_id,
+            )) => {
                 assert_eq!(item_id, item_id.to_string());
             }
             _ => panic!("Test failed"),
@@ -369,14 +384,19 @@ mod tests {
 
         let mut item_repository = MockIItemRepository::new();
 
-        item_repository.expect_find().returning(|_| Err(anyhow!("")));
+        item_repository
+            .expect_find()
+            .returning(|_| Err(anyhow!("")));
 
-        let use_case = CreateAuctionUseCase::new(Arc::new(MockIAuctionRepository::new()), Arc::new(item_repository));
+        let use_case = CreateAuctionUseCase::new(
+            Arc::new(MockIAuctionRepository::new()),
+            Arc::new(item_repository),
+        );
 
         let dto = dtos::CreateAuctionRequest {
             item_id: "invalid_id".to_string(),
             starting_price: 0.0,
-            end_date: Utc::now() + chrono::Duration::minutes(10),
+            end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
         };
 
         // Act
