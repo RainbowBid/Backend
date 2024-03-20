@@ -31,6 +31,14 @@ pub enum AppError {
     GetItemFailed(#[source] anyhow::Error),
     #[error("Item {0} does not belong to user {1}")]
     ItemDoesNotBelongToUser(String, String),
+    #[error("Failed to create auction: {0}")]
+    CreateAuctionFailed(#[source] anyhow::Error),
+    #[error("Cannot create auction for item with id: {1} that does not belong to current user with id: {0}")]
+    CannotCreateAuctionForItemThatDoesNotBelongToCurrentUser(String, String),
+    #[error("Cannot create auction for non-existing item with id: {0}")]
+    CannotCreateAuctionForNonExistingItem(String),
+    #[error("Cannot create auction for item with id {0} that already has an ongoing auction")]
+    CannotCreateAuctionForItemWithOngoingAuction(String),
 }
 
 impl IntoResponse for AppError {
@@ -67,6 +75,18 @@ impl IntoResponse for AppError {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
             }
             AppError::ItemDoesNotBelongToUser(_, _) => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::CreateAuctionFailed(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::CannotCreateAuctionForItemThatDoesNotBelongToCurrentUser(_, _) => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::CannotCreateAuctionForNonExistingItem(_) => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::CannotCreateAuctionForItemWithOngoingAuction(_) => {
                 (StatusCode::FORBIDDEN, error_message).into_response()
             }
         }

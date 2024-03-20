@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use application::use_cases::auctions::create_auction_use_case::CreateAuctionUseCase;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 
@@ -10,6 +11,7 @@ use application::use_cases::items::get_items_use_case::GetItemsUseCase;
 use application::use_cases::user::get_user_use_case::GetUserUseCase;
 use application::use_cases::user::login_use_case::LoginUseCase;
 use application::use_cases::user::register_use_case::RegisterUseCase;
+use domain::entities::auction::Auction;
 use domain::entities::item::Item;
 use domain::entities::user::User;
 use infrastructure::repositories::DatabaseRepositoryImpl;
@@ -22,6 +24,8 @@ pub struct Modules {
     pub(crate) get_item_image_use_case: GetItemImageUseCase<DatabaseRepositoryImpl<Item>>,
     pub(crate) get_items_use_case: GetItemsUseCase<DatabaseRepositoryImpl<Item>>,
     pub(crate) get_item_use_case: GetItemUseCase<DatabaseRepositoryImpl<Item>>,
+    pub(crate) create_auction_use_case:
+        CreateAuctionUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
 }
 
 impl Modules {
@@ -29,6 +33,8 @@ impl Modules {
         let user_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
         let item_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
+
+        let auction_repository = Arc::new(DatabaseRepositoryImpl::new(db.clone()));
 
         let register_use_case = RegisterUseCase::new(user_repository.clone());
 
@@ -44,6 +50,9 @@ impl Modules {
 
         let get_item_use_case = GetItemUseCase::new(item_repository.clone());
 
+        let create_auction_use_case =
+            CreateAuctionUseCase::new(auction_repository.clone(), item_repository.clone());
+
         Self {
             register_use_case,
             login_use_case,
@@ -52,6 +61,7 @@ impl Modules {
             create_item_use_case,
             get_item_image_use_case,
             get_item_use_case,
+            create_auction_use_case,
         }
     }
 }
