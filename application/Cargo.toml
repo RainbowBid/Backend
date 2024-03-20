@@ -20,3 +20,4 @@ bcrypt = "0.15.0"
 uuid = { version = "1.7.0", features = ["v4"] }
 axum_typed_multipart = "0.11.0"
 tempfile = "3.10.1"
+chrono = { version = "0.4.19", features = ["serde"] }
