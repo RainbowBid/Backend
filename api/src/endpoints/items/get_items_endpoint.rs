@@ -9,18 +9,17 @@ use domain::entities::item::Category;
 use domain::entities::user::User;
 
 #[derive(Deserialize)]
-pub struct QueryParamsDto{
+pub struct QueryParamsDto {
     category: Option<String>,
 }
 
 pub async fn handle(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
-    Query(params): Query<QueryParamsDto>
+    Query(params): Query<QueryParamsDto>,
 ) -> Result<impl IntoResponse, AppError> {
     let category = match params.category {
-        Some(category) =>
-            Some(Category::from(category)),
+        Some(category) => Some(Category::from(category)),
         None => None,
     };
     let response = state

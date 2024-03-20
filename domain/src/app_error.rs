@@ -27,6 +27,8 @@ pub enum AppError {
     InvalidRequest(#[from] validator::ValidationErrors),
     #[error("Failed to get image for items with id {0}")]
     GetItemImageFailed(#[source] anyhow::Error),
+    #[error("Failed to get item with id {0}")]
+    GetItemFailed(#[source] anyhow::Error),
     #[error("Item {0} does not belong to user {1}")]
     ItemDoesNotBelongToUser(String, String),
 }
@@ -59,6 +61,9 @@ impl IntoResponse for AppError {
             }
             AppError::InvalidRequest(_) => (StatusCode::BAD_REQUEST, error_message).into_response(),
             AppError::GetItemImageFailed(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::GetItemFailed(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
             }
             AppError::ItemDoesNotBelongToUser(_, _) => {

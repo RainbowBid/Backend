@@ -1,17 +1,17 @@
+use crate::use_cases::items::get_items_use_case::dtos::{GetAllItemsByUserIdResponse, ItemDto};
 use domain::app_error::AppError;
-use domain::app_error::AppError::{InternalServerError};
+use domain::app_error::AppError::InternalServerError;
+use domain::entities::item::Category;
 use domain::interfaces::i_item_repository::IItemRepository;
 use std::sync::Arc;
 use tracing::info;
-use domain::entities::item::Category;
-use crate::use_cases::items::get_items_use_case::dtos::{GetAllItemsByUserIdResponse, ItemDto};
 
 pub mod dtos {
     use axum::http::StatusCode;
     use axum::response::{IntoResponse, Response};
     use axum::Json;
     use domain::entities::item::Item;
-    use serde::{ Serialize};
+    use serde::Serialize;
 
     #[derive(Serialize, Debug)]
     pub struct GetAllItemsByUserIdResponse {
@@ -30,6 +30,12 @@ pub mod dtos {
         pub description: String,
         pub category: String,
         pub user_id: String,
+    }
+
+    impl IntoResponse for ItemDto {
+        fn into_response(self) -> Response {
+            (StatusCode::OK, Json(self)).into_response()
+        }
     }
 
     impl From<Item> for ItemDto {
@@ -54,7 +60,11 @@ impl<R: IItemRepository> GetItemsUseCase<R> {
         Self { item_repository }
     }
 
-    pub async fn execute(&self, user_id: String, category: Option<Category>) -> Result<GetAllItemsByUserIdResponse, AppError> {
+    pub async fn execute(
+        &self,
+        user_id: String,
+        category: Option<Category>,
+    ) -> Result<GetAllItemsByUserIdResponse, AppError> {
         info!("Getting items for user with id {}", user_id);
 
         let items = self
@@ -74,9 +84,9 @@ impl<R: IItemRepository> GetItemsUseCase<R> {
 mod tests {
     use crate::use_cases::items::get_items_use_case::dtos::GetAllItemsByUserIdResponse;
     use crate::use_cases::items::get_items_use_case::GetItemsUseCase;
+    use domain::entities::item::Category;
     use domain::interfaces::i_item_repository::MockIItemRepository;
     use std::sync::Arc;
-    use domain::entities::item::Category;
 
     #[tokio::test]
     async fn given_request_when_executing_then_items_belonging_to_user_are_returned() {
@@ -89,7 +99,9 @@ mod tests {
         let use_case = GetItemsUseCase::new(Arc::new(item_repository));
 
         //Act
-        let result = use_case.execute("user_id".to_string(), Some(Category::Art)).await;
+        let result = use_case
+            .execute("user_id".to_string(), Some(Category::Art))
+            .await;
 
         //Assert
         assert!(result.is_ok());
