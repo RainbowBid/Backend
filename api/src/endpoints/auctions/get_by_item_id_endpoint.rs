@@ -13,23 +13,19 @@ use tracing::{error, info};
 
 #[derive(Deserialize)]
 pub struct PathParams {
-    itemId: Option<String>,
+    item_id: Option<String>,
 }
+
 pub async fn handle(
     State(state): State<AppState>,
     Extension(current_user): Extension<User>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, AppError> {
 
-    let item_id = match path_params.itemId {
-        Some(item_id) => item_id,
-        None => "".to_string(),
-    };
-    info!("Getting1 auction with item_id: {}", item_id);
+    let item_id = path_params.item_id.unwrap_or_else(|| "".to_string());
     if item_id == "" {
         AppError::CannotGetAuctionForEmptyItemId();
     }
-    info!("Getting2 auction with item_id: {}", item_id);
 
     let response = state
         .modules
