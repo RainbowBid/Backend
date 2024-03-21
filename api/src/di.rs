@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use application::use_cases::auctions::create_auction_use_case::CreateAuctionUseCase;
+use application::use_cases::auctions::get_ongoing_auction_for_item_use_case::GetAuctionByItemIdUseCase;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 
@@ -26,6 +27,7 @@ pub struct Modules {
     pub(crate) get_item_use_case: GetItemUseCase<DatabaseRepositoryImpl<Item>>,
     pub(crate) create_auction_use_case:
         CreateAuctionUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
+    pub(crate) get_by_item_id: GetAuctionByItemIdUseCase<DatabaseRepositoryImpl<Auction>>,
 }
 
 impl Modules {
@@ -53,6 +55,8 @@ impl Modules {
         let create_auction_use_case =
             CreateAuctionUseCase::new(auction_repository.clone(), item_repository.clone());
 
+        let get_by_item_id = GetAuctionByItemIdUseCase::new(auction_repository.clone());
+
         Self {
             register_use_case,
             login_use_case,
@@ -62,6 +66,7 @@ impl Modules {
             get_item_image_use_case,
             get_item_use_case,
             create_auction_use_case,
+            get_by_item_id,
         }
     }
 }
