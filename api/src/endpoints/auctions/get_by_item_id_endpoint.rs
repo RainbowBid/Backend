@@ -1,15 +1,11 @@
 use crate::di::AppState;
-use application::use_cases::auctions::create_auction_use_case::dtos::CreateAuctionRequest;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
 use axum::response::IntoResponse;
-use axum::{Extension, Json};
-use axum_valid::Valid;
+use axum::Extension;
 use domain::app_error::AppError;
-use domain::entities::item::Category;
 use domain::entities::user::User;
-use http::StatusCode;
-use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use serde::Deserialize;
+use tracing::error;
 
 #[derive(Deserialize)]
 pub struct PathParams {
@@ -21,9 +17,8 @@ pub async fn handle(
     Extension(current_user): Extension<User>,
     Path(path_params): Path<PathParams>,
 ) -> Result<impl IntoResponse, AppError> {
-
     let item_id = path_params.item_id.unwrap_or_else(|| "".to_string());
-    if item_id == "" {
+    if item_id.is_empty() {
         AppError::CannotGetAuctionForEmptyItemId();
     }
 
@@ -32,7 +27,6 @@ pub async fn handle(
         .get_by_item_id
         .execute(item_id)
         .await
-        .map(|result| result)
         .map_err(|e| {
             error!("Failed to get auction: {:?}", e);
             e

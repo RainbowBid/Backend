@@ -95,11 +95,9 @@ impl IntoResponse for AppError {
             }
             AppError::CannotGetAuctionForEmptyItemId() => {
                 (StatusCode::FORBIDDEN, error_message).into_response()
-
             }
             AppError::GetAuctionFailed(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
-
             }
         }
     }

@@ -1,18 +1,14 @@
-use crate::use_cases::items::get_items_use_case::dtos::ItemDto;
 use anyhow::anyhow;
-use chrono::{DateTime, Utc};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
 use domain::app_error::AppError;
 use domain::entities::auction::Auction;
 use domain::entities::item::Item;
-use domain::entities::user::User;
 use domain::id::Id;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
-use domain::interfaces::i_item_repository::IItemRepository;
 use serde::Serialize;
 use std::sync::Arc;
-use axum::http::StatusCode;
-use axum::Json;
-use axum::response::{IntoResponse, Response};
 use tracing::{error, info};
 
 #[derive(Serialize, Debug)]
@@ -30,7 +26,6 @@ impl IntoResponse for AuctionDto {
 }
 
 impl AuctionDto {
-
     fn from_auction(auction: Auction) -> AuctionDto {
         AuctionDto {
             id: auction.id.to_string(),
@@ -50,10 +45,7 @@ impl<R: IAuctionRepository> GetAuctionByItemIdUseCase<R> {
         Self { auction_repository }
     }
 
-    pub async fn execute(
-        &self,
-        item_id: String,
-    ) -> Result<AuctionDto, AppError> {
+    pub async fn execute(&self, item_id: String) -> Result<AuctionDto, AppError> {
         info!("Getting auction with item_id: {}", item_id);
 
         let parsed_item_id = Id::<Item>::try_from(item_id.clone()).map_err(|_| {

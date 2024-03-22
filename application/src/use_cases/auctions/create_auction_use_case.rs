@@ -149,7 +149,6 @@ mod tests {
     use domain::interfaces::i_auction_repository::MockIAuctionRepository;
     use domain::interfaces::i_item_repository::MockIItemRepository;
     use std::sync::Arc;
-    use std::time::SystemTime;
     use uuid::Uuid;
 
     #[tokio::test]
