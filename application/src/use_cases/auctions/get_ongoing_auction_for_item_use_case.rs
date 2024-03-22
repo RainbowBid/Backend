@@ -16,7 +16,7 @@ pub struct AuctionDto {
     pub id: String,
     pub item_id: String,
     pub starting_price: String,
-    pub end_date: String,
+    pub end_date: i64,
 }
 
 impl IntoResponse for AuctionDto {
@@ -31,7 +31,7 @@ impl AuctionDto {
             id: auction.id.to_string(),
             item_id: auction.item_id.to_string(),
             starting_price: auction.starting_price.to_string(),
-            end_date: auction.end_date.to_string(),
+            end_date: auction.end_date.timestamp(),
         }
     }
 }
@@ -62,12 +62,13 @@ impl<R: IAuctionRepository> GetAuctionByItemIdUseCase<R> {
                 info!("Auction found for item_id {}", item_id);
                 Ok(AuctionDto::from_auction(auction))
             }
+            Ok(None) => {
+                error!("Auction not found for item_id {}", item_id);
+                Err(AppError::NoAuctionFoundForItemId(item_id))
+            }
             _ => {
                 error!("Failed to get item");
-                Err(AppError::GetAuctionFailed(anyhow!(
-                    "Failed to get auction for item_id {}",
-                    item_id
-                )))
+                Err(AppError::GetAuctionFailed(item_id))
             }
         }
     }

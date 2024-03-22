@@ -42,7 +42,9 @@ pub enum AppError {
     #[error("Cannot get auction for empty item_id")]
     CannotGetAuctionForEmptyItemId(),
     #[error("Failed to get auction for item_id {0}")]
-    GetAuctionFailed(#[source] anyhow::Error),
+    GetAuctionFailed(String),
+    #[error("No auction found for item_id {0}")]
+    NoAuctionFoundForItemId(String),
 }
 
 impl IntoResponse for AppError {
@@ -98,6 +100,9 @@ impl IntoResponse for AppError {
             }
             AppError::GetAuctionFailed(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::NoAuctionFoundForItemId(_) => {
+                (StatusCode::NOT_FOUND, error_message).into_response()
             }
         }
     }
