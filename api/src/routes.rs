@@ -87,8 +87,7 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
         )
         .route(
             "/:item_id",
-            get(endpoints::auctions::get_by_item_id_endpoint::handle)
-                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+            get(endpoints::auctions::get_by_item_id_endpoint::handle),
         );
 
     Router::new()

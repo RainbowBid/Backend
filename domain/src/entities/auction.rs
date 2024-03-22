@@ -1,4 +1,4 @@
-use crate::entities::item::Item;
+use crate::entities::item::{Category, Item};
 use crate::entities::user::User;
 use crate::id::Id;
 use chrono::{DateTime, Utc};
@@ -32,6 +32,7 @@ pub struct AuctionWithItem {
     pub end_date: DateTime<Utc>,
     pub brief: String,
     pub description: String,
+    pub category: Category,
     pub user_id: Id<User>,
 }
 
@@ -43,6 +44,7 @@ impl AuctionWithItem {
         end_date: DateTime<Utc>,
         brief: String,
         description: String,
+        category: Category,
         user_id: Id<User>,
     ) -> Self {
         Self {
@@ -52,6 +54,7 @@ impl AuctionWithItem {
             end_date,
             brief,
             description,
+            category,
             user_id,
         }
     }

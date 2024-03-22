@@ -120,7 +120,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn given_valid_item_id_with_ongoing_auction_and_user_id_other_than_item_owner_when_get_item_image_use_case_then_return_image() {
+    async fn given_valid_item_id_with_ongoing_auction_and_user_id_other_than_item_owner_when_get_item_image_use_case_then_return_image(
+    ) {
         // Arrange
         let item_id = String::from("00000000-0000-0000-0000-000000000000");
         let user_id = String::from("00000000-0000-0000-0000-000000000001");
@@ -150,13 +151,13 @@ mod tests {
         };
 
         let mut auction_repository = MockIAuctionRepository::new();
-        
+
         let auction = domain::entities::auction::Auction::new(
             item_id.clone().try_into().unwrap(),
             100.0,
             chrono::Utc::now() + chrono::Duration::days(1),
         );
-        
+
         let item_id_clone = item_id.clone();
         auction_repository
             .expect_find_ongoing_by_item_id()
@@ -174,7 +175,7 @@ mod tests {
         // Assert
         assert!(result.is_ok());
     }
-    
+
     #[tokio::test]
     async fn given_invalid_item_id_when_get_item_image_use_case_then_return_error() {
         // Arrange

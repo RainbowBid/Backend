@@ -72,6 +72,7 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
                 auctions.end_date, \
                 items.brief, \
                 items.description, \
+                items.category, \
                 items.user_id \
             FROM \
             auctions INNER JOIN items ON auctions.item_id = items.id \

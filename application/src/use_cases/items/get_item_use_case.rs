@@ -119,7 +119,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn given_valid_item_id_with_ongoing_auction_and_user_id_other_than_item_owner_when_get_item_image_use_case_then_return_item() {
+    async fn given_valid_item_id_with_ongoing_auction_and_user_id_other_than_item_owner_when_get_item_image_use_case_then_return_item(
+    ) {
         //Arrange
         let item_id = String::from("00000000-0000-0000-0000-000000000000");
         let user_id = String::from("00000000-0000-0000-0000-000000000001");
