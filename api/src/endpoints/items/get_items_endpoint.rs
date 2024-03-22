@@ -1,7 +1,6 @@
 use axum::extract::{Query, State};
 use axum::response::IntoResponse;
 use axum::Extension;
-use serde::Deserialize;
 
 use crate::di::AppState;
 use crate::endpoints::QueryFilterParamDto;
@@ -14,10 +13,7 @@ pub async fn handle(
     Extension(user): Extension<User>,
     Query(params): Query<QueryFilterParamDto>,
 ) -> Result<impl IntoResponse, AppError> {
-    let category = match params.category {
-        Some(category) => Some(Category::from(category)),
-        None => None,
-    };
+    let category = params.category.map(Category::from);
     let response = state
         .modules
         .get_items_use_case

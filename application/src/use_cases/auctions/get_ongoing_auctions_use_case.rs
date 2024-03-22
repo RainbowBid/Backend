@@ -1,14 +1,10 @@
-use crate::use_cases::auctions::get_ongoing_auction_for_item_use_case::AuctionDto;
-use anyhow::anyhow;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use chrono::{DateTime, Utc};
 use domain::app_error::AppError;
-use domain::entities::auction::{Auction, AuctionWithItem};
-use domain::entities::item::{Category, Item};
-use domain::entities::user::User;
-use domain::id::Id;
+use domain::entities::auction::AuctionWithItem;
+use domain::entities::item::Category;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -23,7 +19,7 @@ impl GetAllDto {
         GetAllDto {
             auctions: auctions_and_items
                 .iter()
-                .map(|auction_and_item| AuctionWithItemDto::from(auction_and_item))
+                .map(AuctionWithItemDto::from)
                 .collect(),
         }
     }
@@ -48,6 +44,7 @@ pub struct AuctionWithItemDto {
     pub end_date: DateTime<Utc>,
     pub brief: String,
     pub description: String,
+    pub category: String,
     pub user_id: String,
 }
 impl AuctionWithItemDto {
@@ -59,6 +56,7 @@ impl AuctionWithItemDto {
             end_date: auction.end_date,
             brief: auction.brief.clone(),
             description: auction.description.clone(),
+            category: auction.category.clone().into(),
             user_id: auction.user_id.clone().to_string(),
         }
     }

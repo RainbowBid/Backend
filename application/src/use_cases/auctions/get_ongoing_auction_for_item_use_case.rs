@@ -15,7 +15,7 @@ use tracing::{error, info};
 pub struct AuctionDto {
     pub id: String,
     pub item_id: String,
-    pub starting_price: String,
+    pub starting_price: f32,
     pub end_date: i64,
 }
 
@@ -30,7 +30,7 @@ impl AuctionDto {
         AuctionDto {
             id: auction.id.to_string(),
             item_id: auction.item_id.to_string(),
-            starting_price: auction.starting_price.to_string(),
+            starting_price: auction.starting_price,
             end_date: auction.end_date.timestamp(),
         }
     }

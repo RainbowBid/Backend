@@ -91,8 +91,7 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
         )
         .route(
             "/all",
-            get(endpoints::auctions::get_all_endpoint::handle)
-                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+            get(endpoints::auctions::get_all_endpoint::handle),
         );
 
     Router::new()
