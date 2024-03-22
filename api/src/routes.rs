@@ -79,11 +79,20 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
                 .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
         );
 
-    let auction_router = Router::new().route(
-        "/create",
-        post(endpoints::auctions::create_endpoint::handle)
-            .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
-    );
+    let auction_router = Router::new()
+        .route(
+            "/create",
+            post(endpoints::auctions::create_endpoint::handle)
+                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+        )
+        .route(
+            "/:item_id",
+            get(endpoints::auctions::get_by_item_id_endpoint::handle),
+        )
+        .route(
+            "/all",
+            get(endpoints::auctions::get_all_endpoint::handle),
+        );
 
     Router::new()
         .nest("/auth", auth_router)

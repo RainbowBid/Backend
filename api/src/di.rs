@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
 use application::use_cases::auctions::create_auction_use_case::CreateAuctionUseCase;
+use application::use_cases::auctions::get_ongoing_auction_for_item_use_case::GetAuctionByItemIdUseCase;
+use application::use_cases::auctions::get_ongoing_auctions_use_case::GetAuctionsUseCase;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 
@@ -21,11 +23,15 @@ pub struct Modules {
     pub(crate) login_use_case: LoginUseCase<DatabaseRepositoryImpl<User>>,
     pub(crate) get_user_use_case: GetUserUseCase<DatabaseRepositoryImpl<User>>,
     pub(crate) create_item_use_case: CreateItemUseCase<DatabaseRepositoryImpl<Item>>,
-    pub(crate) get_item_image_use_case: GetItemImageUseCase<DatabaseRepositoryImpl<Item>>,
+    pub(crate) get_item_image_use_case:
+        GetItemImageUseCase<DatabaseRepositoryImpl<Item>, DatabaseRepositoryImpl<Auction>>,
     pub(crate) get_items_use_case: GetItemsUseCase<DatabaseRepositoryImpl<Item>>,
-    pub(crate) get_item_use_case: GetItemUseCase<DatabaseRepositoryImpl<Item>>,
+    pub(crate) get_item_use_case:
+        GetItemUseCase<DatabaseRepositoryImpl<Item>, DatabaseRepositoryImpl<Auction>>,
     pub(crate) create_auction_use_case:
         CreateAuctionUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
+    pub(crate) get_by_item_id: GetAuctionByItemIdUseCase<DatabaseRepositoryImpl<Auction>>,
+    pub(crate) get_auctions_use_case: GetAuctionsUseCase<DatabaseRepositoryImpl<Auction>>,
 }
 
 impl Modules {
@@ -46,12 +52,18 @@ impl Modules {
 
         let create_item_use_case = CreateItemUseCase::new(item_repository.clone());
 
-        let get_item_image_use_case = GetItemImageUseCase::new(item_repository.clone());
+        let get_item_image_use_case =
+            GetItemImageUseCase::new(item_repository.clone(), auction_repository.clone());
 
-        let get_item_use_case = GetItemUseCase::new(item_repository.clone());
+        let get_item_use_case =
+            GetItemUseCase::new(item_repository.clone(), auction_repository.clone());
 
         let create_auction_use_case =
             CreateAuctionUseCase::new(auction_repository.clone(), item_repository.clone());
+
+        let get_by_item_id = GetAuctionByItemIdUseCase::new(auction_repository.clone());
+
+        let get_auctions_use_case = GetAuctionsUseCase::new(auction_repository.clone());
 
         Self {
             register_use_case,
@@ -62,6 +74,8 @@ impl Modules {
             get_item_image_use_case,
             get_item_use_case,
             create_auction_use_case,
+            get_by_item_id,
+            get_auctions_use_case,
         }
     }
 }

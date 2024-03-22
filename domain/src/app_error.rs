@@ -39,6 +39,14 @@ pub enum AppError {
     CannotCreateAuctionForNonExistingItem(String),
     #[error("Cannot create auction for item with id {0} that already has an ongoing auction")]
     CannotCreateAuctionForItemWithOngoingAuction(String),
+    #[error("Cannot get auction for empty item_id")]
+    CannotGetAuctionForEmptyItemId(),
+    #[error("Failed to get auction for item_id {0}")]
+    GetAuctionFailed(String),
+    #[error("No auction found for item_id {0}")]
+    NoAuctionFoundForItemId(String),
+    #[error("Failed to get auctions.")]
+    FailedToGetAuctions(),
 }
 
 impl IntoResponse for AppError {
@@ -88,6 +96,18 @@ impl IntoResponse for AppError {
             }
             AppError::CannotCreateAuctionForItemWithOngoingAuction(_) => {
                 (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::CannotGetAuctionForEmptyItemId() => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::GetAuctionFailed(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::NoAuctionFoundForItemId(_) => {
+                (StatusCode::NOT_FOUND, error_message).into_response()
+            }
+            AppError::FailedToGetAuctions() => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
             }
         }
     }

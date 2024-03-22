@@ -50,6 +50,7 @@ pub struct AuctionWithItemModel {
     pub end_date: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
     pub brief: String,
     pub description: String,
+    pub category: String,
     pub user_id: Uuid,
 }
 
@@ -67,6 +68,7 @@ impl TryFrom<AuctionWithItemModel> for AuctionWithItem {
             ),
             brief: auction_table.brief,
             description: auction_table.description,
+            category: auction_table.category.into(),
             user_id: auction_table.user_id.to_string().try_into()?,
         })
     }
@@ -86,6 +88,7 @@ impl TryFrom<AuctionWithItem> for AuctionWithItemModel {
             ),
             brief: auction.brief,
             description: auction.description,
+            category: auction.category.into(),
             user_id: Uuid::parse_str(&auction.user_id.to_string())?,
         })
     }
