@@ -2,6 +2,7 @@ use crate::entities::item::Item;
 use crate::entities::user::User;
 use crate::id::Id;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 pub struct Auction {

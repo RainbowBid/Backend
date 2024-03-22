@@ -52,7 +52,6 @@ impl<R: IAuctionRepository> GetAuctionByItemIdUseCase<R> {
             AppError::GetItemFailed(anyhow!("Cannot get auction for invalid item_id"))
         })?;
 
-        //todo!("check if item_id.into() is doing the parsing well : from String to Id<Item>");
         match self
             .auction_repository
             .find_ongoing_by_item_id(parsed_item_id)
@@ -117,73 +116,5 @@ impl<R: IAuctionRepository> GetAuctionByItemIdUseCase<R> {
 //
 //         //Assert
 //         assert!(result.is_ok());
-//     }
-//
-//     #[tokio::test]
-//     async fn given_invalid_item_id_when_get_item_use_case_then_return_error() {
-//         //Arrange
-//         let item_id = String::from("00000000-0000-0000-0000-000000000000");
-//         let mut item_repository = MockIItemRepository::new();
-//
-//         let item_id_clone = item_id.clone();
-//         item_repository
-//             .expect_find()
-//             .withf(move |id| id.value.to_string() == item_id_clone)
-//             .returning(|_| Ok(None));
-//         let item_repository = Arc::new(item_repository);
-//         let current_user = domain::entities::user::User::new(
-//             "username".to_string(),
-//             "email".to_string(),
-//             "password".to_string(),
-//         );
-//         let use_case = GetItemUseCase::new(item_repository);
-//
-//         //Act
-//         let result = use_case.execute(current_user, item_id).await;
-//
-//         //Assert
-//         match result {
-//             Err(AppError::GetItemFailed(_)) => assert!(true),
-//             _ => panic!("Test failed"),
-//         }
-//     }
-//
-//     #[tokio::test]
-//     async fn given_item_not_belonging_to_user_when_get_item_use_case_then_return_error() {
-//         //Arrange
-//         let item_id = String::from("00000000-0000-0000-0000-000000000000");
-//         let item = Item::new(
-//             "brief".to_string(),
-//             "description".to_string(),
-//             vec![],
-//             String::from("00000000-0000-0000-0000-000000000001")
-//                 .try_into()
-//                 .unwrap(),
-//             Category::Diverse,
-//         );
-//         let mut item_repository = MockIItemRepository::new();
-//
-//         let item_id_clone = item_id.clone();
-//         item_repository
-//             .expect_find()
-//             .withf(move |id| id.value.to_string() == item_id_clone)
-//             .returning(move |_| Ok(Some(item.clone())));
-//         let item_repository = Arc::new(item_repository);
-//         let current_user = domain::entities::user::User::new(
-//             "username".to_string(),
-//             "email".to_string(),
-//             "password".to_string(),
-//         );
-//
-//         let use_case = GetItemUseCase::new(item_repository);
-//
-//         //Act
-//         let result = use_case.execute(current_user, item_id).await;
-//
-//         //Assert
-//         match result {
-//             Err(AppError::ItemDoesNotBelongToUser(_, _)) => assert!(true),
-//             _ => panic!("Test failed"),
-//         }
 //     }
 // }
