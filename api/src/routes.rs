@@ -92,11 +92,13 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
         .route("/all", get(endpoints::auctions::get_all_endpoint::handle))
         .route(
             "/:auction_id/bids/create",
-            get(endpoints::auctions::bids::create_endpoint::handle),
+            post(endpoints::auctions::bids::create_endpoint::handle)
+                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
         )
         .route(
             "/:auction_id/bids/all",
-            get(endpoints::auctions::bids::get_all_endpoint::handle),
+            get(endpoints::auctions::bids::get_all_endpoint::handle)
+                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
         );
 
     Router::new()

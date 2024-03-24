@@ -22,10 +22,10 @@ pub mod dtos {
 
     #[derive(Deserialize, Debug, Validate)]
     pub struct CreateBidRequest {
-        pub id: String,
         pub value: f32,
         #[serde(skip_deserializing)]
         pub auction_id: String,
+        #[serde(skip_deserializing)]
         pub user_id: String,
     }
 
@@ -61,6 +61,11 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
         request: dtos::CreateBidRequest,
     ) -> Result<(), AppError> {
         info!("Creating bid for auction with id: {}", request.auction_id);
+
+        if request.user_id == current_user.id.to_string() {
+            error!("Owner with id = {} -> cannot bid on his own auction.", current_user.id.to_string());
+            return Err(AppError::OwnerCannotBid());
+        }
 
         let auction_id = Id::<Auction>::try_from(request.auction_id.clone()).map_err(|_| {
             error!(

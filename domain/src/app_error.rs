@@ -51,6 +51,8 @@ pub enum AppError {
     CreateBidFailed(#[source] anyhow::Error),
     #[error("Failed to create bid. Internal server error.")]
     CreateBidFailedInternalServerError(#[source] anyhow::Error),
+    #[error("Owner cannot bid to its auction")]
+    OwnerCannotBid(),
 }
 
 impl IntoResponse for AppError {
@@ -118,6 +120,9 @@ impl IntoResponse for AppError {
             }
             AppError::CreateBidFailedInternalServerError(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::OwnerCannotBid() => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
             }
         }
     }

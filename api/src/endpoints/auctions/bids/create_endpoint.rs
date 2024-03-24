@@ -16,9 +16,9 @@ pub async fn handle(
     Path(auction_id): Path<String>,
     Valid(Json(request)): Valid<Json<CreateBidRequest>>,
 ) -> Result<impl IntoResponse, AppError> {
-
     let request = CreateBidRequest {
         auction_id: auction_id.clone(),
+        user_id: current_user.id.to_string(),
         ..request
     };
 

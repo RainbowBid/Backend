@@ -130,13 +130,13 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
         let result = sqlx::query_as::<_, BidWithUsernameModel>(
             "SELECT \
                 bids.id, \
-                bids.item_id, \
+                bids.auction_id, \
                 bids.user_id, \
                 bids.value, \
                 users.username \
             FROM \
-            auctions, bids JOIN users ON bids.user_id = users.id  \
-            WHERE auctions.id == $1",
+            auctions, bids INNER JOIN users ON bids.user_id = users.id  \
+            WHERE auctions.id = $1",
         )
         .bind(auction_id)
         .fetch_all(pool.as_ref())
