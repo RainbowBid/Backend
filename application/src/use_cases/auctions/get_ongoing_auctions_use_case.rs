@@ -1,7 +1,6 @@
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use chrono::{DateTime, Utc};
 use domain::app_error::AppError;
 use domain::entities::auction::AuctionWithItem;
 use domain::entities::item::Category;
@@ -14,6 +13,7 @@ use tracing::{error, info};
 pub struct GetAllDto {
     auctions: Vec<AuctionWithItemDto>,
 }
+
 impl GetAllDto {
     fn from_auctions_and_items(auctions_and_items: Vec<AuctionWithItem>) -> GetAllDto {
         GetAllDto {
@@ -30,6 +30,7 @@ impl GetAllDto {
         }
     }
 }
+
 impl IntoResponse for GetAllDto {
     fn into_response(self) -> Response {
         (StatusCode::OK, Json(self)).into_response()
@@ -41,7 +42,7 @@ pub struct AuctionWithItemDto {
     pub id: String,
     pub item_id: String,
     pub starting_price: f32,
-    pub end_date: DateTime<Utc>,
+    pub end_date: i64,
     pub brief: String,
     pub description: String,
     pub category: String,
@@ -53,7 +54,7 @@ impl AuctionWithItemDto {
             id: auction.id.clone().to_string(),
             item_id: auction.item_id.clone().to_string(),
             starting_price: auction.starting_price,
-            end_date: auction.end_date,
+            end_date: auction.end_date.timestamp(),
             brief: auction.brief.clone(),
             description: auction.description.clone(),
             category: auction.category.clone().into(),
