@@ -6,7 +6,6 @@ use async_trait::async_trait;
 use domain::entities::auction::{Auction, AuctionWithItem};
 use domain::entities::bid::{Bid, BidWithUsername};
 use domain::entities::item::{Category, Item};
-use domain::entities::user::User;
 use domain::id::Id;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
 use log::error;
@@ -47,6 +46,34 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
             "SELECT * FROM auctions WHERE item_id = $1 AND end_date > now()",
         )
         .bind(item_id)
+        .fetch_optional(pool.as_ref())
+        .await
+        .map_err(|e| {
+            error!("{:?}", e);
+            anyhow!("{:?}", e)
+        })?;
+
+        match result {
+            Some(auction) => Ok(Some(Auction::try_from(auction)?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn find_ongoing_by_id(&self, auction_id: Id<Auction>) -> anyhow::Result<Option<Auction>> {
+        let pool = self.pool.0.clone();
+        let auction_id = Uuid::parse_str(auction_id.value.to_string().as_str())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        let result = sqlx::query_as::<_, AuctionModel>(
+            "SELECT * \
+            FROM auctions \
+
+            WHERE id = $1 ",
+            FROM \
+            auctions INNER JOIN items ON auctions.item_id = items.id \
+            WHERE end_date > now() AND ($1 IS NULL OR items.category = $1)",
+        )
+        .bind(auction_id)
         .fetch_optional(pool.as_ref())
         .await
         .map_err(|e| {

@@ -1,5 +1,4 @@
 use crate::di::AppState;
-use application::use_cases::auctions::create_auction_use_case::dtos::CreateAuctionRequest;
 use application::use_cases::bids::create_bid_use_case::dtos::CreateBidRequest;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;

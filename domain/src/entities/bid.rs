@@ -1,7 +1,6 @@
 use crate::entities::auction::Auction;
 use crate::entities::user::User;
 use crate::id::Id;
-use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct Bid {

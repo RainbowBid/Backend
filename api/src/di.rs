@@ -16,7 +16,6 @@ use application::use_cases::user::get_user_use_case::GetUserUseCase;
 use application::use_cases::user::login_use_case::LoginUseCase;
 use application::use_cases::user::register_use_case::RegisterUseCase;
 use domain::entities::auction::Auction;
-use domain::entities::bid::Bid;
 use domain::entities::item::Item;
 use domain::entities::user::User;
 use infrastructure::repositories::DatabaseRepositoryImpl;

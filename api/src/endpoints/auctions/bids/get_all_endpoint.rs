@@ -1,10 +1,7 @@
 use crate::di::AppState;
-use crate::endpoints::QueryFilterParamDto;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path,  State};
 use axum::response::IntoResponse;
 use domain::app_error::AppError;
-use domain::entities::item::Category;
-use serde::Deserialize;
 
 use tracing::error;
 

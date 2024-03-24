@@ -5,10 +5,8 @@ use domain::entities::bid::Bid;
 use domain::entities::user::User;
 use domain::id::Id;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
-use serde::Deserialize;
 use std::sync::Arc;
 use tracing::{error, info};
-use validator::Validate;
 
 pub mod dtos {
     use anyhow::anyhow;
@@ -35,10 +33,10 @@ pub mod dtos {
         fn try_from(value: CreateBidRequest) -> Result<Bid, AppError> {
             Ok(Bid::new(
                 value.value,
-                Id::<Auction>::try_from(value.auction_id).map_err(|err| {
+                Id::<Auction>::try_from(value.auction_id).map_err(|_| {
                     AppError::CreateBidFailed(anyhow!("Failed to create bid. Bad bid data."))
                 })?,
-                Id::<User>::try_from(value.user_id).map_err(|err| {
+                Id::<User>::try_from(value.user_id).map_err(|_| {
                     AppError::CreateBidFailed(anyhow!("Failed to create bid. Bad bid data."))
                 })?,
             ))
@@ -62,11 +60,7 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
     ) -> Result<(), AppError> {
         info!("Creating bid for auction with id: {}", request.auction_id);
 
-        if request.user_id == current_user.id.to_string() {
-            error!("Owner with id = {} -> cannot bid on his own auction.", current_user.id.to_string());
-            return Err(AppError::OwnerCannotBid());
-        }
-
+        // ia auction din baza de date si verifica cu ownerul
         let auction_id = Id::<Auction>::try_from(request.auction_id.clone()).map_err(|_| {
             error!(
                 "Failed to get auction with auction_id = {}",
@@ -74,6 +68,20 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
             );
             AppError::CreateBidFailed(anyhow!("Failed to create bid."))
         })?;
+        let owner_id = self.auction_repository.find_ongoing_by_id(auction_id.clone()).await.ok_or_else(|| {
+            error!(
+                "Failed to get auction with auction_id = {}",
+                request.auction_id
+            );
+            AppError::CreateBidFailed(anyhow!("Failed to create bid."))
+        })?.user_id;
+
+        if request.user_id == owner_id {
+            error!("Owner with id = {} -> cannot bid on his own auction.", current_user.id.to_string());
+            return Err(AppError::OwnerCannotBid());
+        }
+
+
 
         let bids_result = self.auction_repository.get_all_bids(auction_id).await;
 
@@ -85,11 +93,11 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
                     )));
                 }
 
-                let bid = Bid::try_from(request).map_err(|err| {
+                let bid = Bid::try_from(request).map_err(|_| {
                     AppError::CreateBidFailed(anyhow!("Failed to create bid. Bad bid data."))
                 })?;
                 match self.auction_repository.create_bid(bid).await {
-                    Ok(Some(bid)) => {
+                    Ok(Some(_)) => {
                         info!("Bid created successfully");
                         Ok(())
                     }
