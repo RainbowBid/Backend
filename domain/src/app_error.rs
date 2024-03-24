@@ -47,6 +47,10 @@ pub enum AppError {
     NoAuctionFoundForItemId(String),
     #[error("Failed to get auctions.")]
     FailedToGetAuctions(),
+    #[error("Failed to create bid.")]
+    CreateBidFailed(#[source] anyhow::Error),
+    #[error("Failed to create bid. Internal server error.")]
+    CreateBidFailedInternalServerError(#[source] anyhow::Error),
 }
 
 impl IntoResponse for AppError {
@@ -107,6 +111,12 @@ impl IntoResponse for AppError {
                 (StatusCode::NOT_FOUND, error_message).into_response()
             }
             AppError::FailedToGetAuctions() => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::CreateBidFailed(_) => {
+                (StatusCode::BAD_REQUEST, error_message).into_response()
+            }
+            AppError::CreateBidFailedInternalServerError(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
             }
         }

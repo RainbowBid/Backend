@@ -5,6 +5,8 @@ use application::use_cases::auctions::get_ongoing_auction_for_item_use_case::Get
 use application::use_cases::auctions::get_ongoing_auctions_use_case::GetAuctionsUseCase;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
+use application::use_cases::bids::create_bid_use_case::CreateBidUseCase;
+use application::use_cases::bids::get_bids_use_case::GetBidsUseCase;
 
 use application::use_cases::items::create_item_use_case::CreateItemUseCase;
 use application::use_cases::items::get_item_image_use_case::GetItemImageUseCase;
@@ -14,6 +16,7 @@ use application::use_cases::user::get_user_use_case::GetUserUseCase;
 use application::use_cases::user::login_use_case::LoginUseCase;
 use application::use_cases::user::register_use_case::RegisterUseCase;
 use domain::entities::auction::Auction;
+use domain::entities::bid::Bid;
 use domain::entities::item::Item;
 use domain::entities::user::User;
 use infrastructure::repositories::DatabaseRepositoryImpl;
@@ -32,6 +35,8 @@ pub struct Modules {
         CreateAuctionUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
     pub(crate) get_by_item_id: GetAuctionByItemIdUseCase<DatabaseRepositoryImpl<Auction>>,
     pub(crate) get_auctions_use_case: GetAuctionsUseCase<DatabaseRepositoryImpl<Auction>>,
+    pub(crate) get_bids_use_case: GetBidsUseCase<DatabaseRepositoryImpl<Bid>>,
+    pub(crate) create_bid_use_case: CreateBidUseCase<DatabaseRepositoryImpl<Bid>>,
 }
 
 impl Modules {
@@ -65,6 +70,10 @@ impl Modules {
 
         let get_auctions_use_case = GetAuctionsUseCase::new(auction_repository.clone());
 
+        let get_bids_use_case = GetBidsUseCase::new(auction_repository.clone());
+
+        let create_bid_use_case = CreateBidUseCase::new(auction_repository.clone());
+
         Self {
             register_use_case,
             login_use_case,
@@ -76,6 +85,8 @@ impl Modules {
             create_auction_use_case,
             get_by_item_id,
             get_auctions_use_case,
+            get_bids_use_case,
+            create_bid_use_case,
         }
     }
 }

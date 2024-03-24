@@ -1,10 +1,10 @@
 use crate::entities::auction::{Auction, AuctionWithItem};
+use crate::entities::bid::Bid;
 use crate::entities::item::{Category, Item};
+use crate::entities::user::User;
 use crate::id::Id;
 use async_trait::async_trait;
 use mockall::automock;
-use crate::entities::bid::Bid;
-use crate::entities::user::User;
 
 #[automock]
 #[async_trait]
