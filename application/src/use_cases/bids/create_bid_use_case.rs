@@ -11,6 +11,7 @@ use tracing::{error, info};
 use validator::Validate;
 
 pub mod dtos {
+    use anyhow::anyhow;
     use domain::app_error::AppError;
     use domain::entities::auction::Auction;
     use domain::entities::bid::Bid;
@@ -23,6 +24,7 @@ pub mod dtos {
     pub struct CreateBidRequest {
         pub id: String,
         pub value: f32,
+        #[serde(skip_deserializing)]
         pub auction_id: String,
         pub user_id: String,
     }
@@ -33,8 +35,12 @@ pub mod dtos {
         fn try_from(value: CreateBidRequest) -> Result<Bid, AppError> {
             Ok(Bid::new(
                 value.value,
-                Id::<Auction>::try_from(value.auction_id)?,
-                Id::<User>::try_from(value.user_id)?,
+                Id::<Auction>::try_from(value.auction_id).map_err(|err| {
+                    AppError::CreateBidFailed(anyhow!("Failed to create bid. Bad bid data."))
+                })?,
+                Id::<User>::try_from(value.user_id).map_err(|err| {
+                    AppError::CreateBidFailed(anyhow!("Failed to create bid. Bad bid data."))
+                })?,
             ))
         }
     }
@@ -56,49 +62,50 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
     ) -> Result<(), AppError> {
         info!("Creating bid for auction with id: {}", request.auction_id);
 
-        let auction_id: Id<Auction> =
-            Id::<Auction>::try_from(request.auction_id.clone()).map_err(|_| {
-                error!(
-                    "Failed to get auction with auction_id = {}",
-                    request.auction_id
-                );
-                AppError::CreateBidFailed(anyhow!("Failed to create bid."))
-            })?;
+        let auction_id = Id::<Auction>::try_from(request.auction_id.clone()).map_err(|_| {
+            error!(
+                "Failed to get auction with auction_id = {}",
+                request.auction_id
+            );
+            AppError::CreateBidFailed(anyhow!("Failed to create bid."))
+        })?;
 
         let bids_result = self.auction_repository.get_all_bids(auction_id).await;
 
         match bids_result {
             Ok(bids) => {
-                if bids.iter().any(|bid: &Bid| bid.value > request.value) {
+                if bids.iter().any(|bid| bid.value > request.value) {
                     return Err(AppError::CreateBidFailed(anyhow!(
                         "New bid's value has to be the greatest from the ongoing auction."
                     )));
                 }
 
-                let bid = Bid::try_from(request).map_err(|err| AppError::CreateBidFailed(anyhow!("Failed to create bid. Bad bid data.")))?;
+                let bid = Bid::try_from(request).map_err(|err| {
+                    AppError::CreateBidFailed(anyhow!("Failed to create bid. Bad bid data."))
+                })?;
                 match self.auction_repository.create_bid(bid).await {
-                        Ok(Some(bid)) => {
-                            info!("Bid created successfully");
-                            Ok(())
-                        }
-                        Ok(None) => {
-                            error!("Failed to create bid: Bid not returned from repository");
-                            Err(AppError::CreateBidFailedInternalServerError(anyhow!(
-                                "Failed to create bid. Internal server error."
-                            )))
-                        }
-                        Err(e) => {
-                            error!("Failed when creating bid in repository: {:?}", e);
-                            Err(AppError::CreateBidFailedInternalServerError(anyhow!(
-                                "Failed to create bid. Internal server error."
-                            )))
-                        }
+                    Ok(Some(bid)) => {
+                        info!("Bid created successfully");
+                        Ok(())
+                    }
+                    Ok(None) => {
+                        error!("Failed to create bid: Bid not returned from repository");
+                        Err(AppError::CreateBidFailedInternalServerError(anyhow!(
+                            "Failed to create bid. Internal server error."
+                        )))
+                    }
+                    Err(e) => {
+                        error!("Failed when creating bid in repository: {:?}", e);
+                        Err(AppError::CreateBidFailedInternalServerError(anyhow!(
+                            "Failed to create bid. Internal server error."
+                        )))
+                    }
                 }
             }
             Err(e) => {
                 error!("Failed when creating bid in repository: {:?}", e);
                 Err(AppError::CreateBidFailedInternalServerError(anyhow!(
-                                "Failed to create bid. Internal server error."
+                    "Failed to create bid. Internal server error."
                 )))
             }
         }

@@ -1,5 +1,5 @@
 use crate::entities::auction::{Auction, AuctionWithItem};
-use crate::entities::bid::Bid;
+use crate::entities::bid::{Bid, BidWithUsername};
 use crate::entities::item::{Category, Item};
 use crate::entities::user::User;
 use crate::id::Id;
@@ -17,5 +17,5 @@ pub trait IAuctionRepository {
     ) -> anyhow::Result<Vec<AuctionWithItem>>;
 
     async fn create_bid(&self, bid: Bid) -> anyhow::Result<Option<Bid>>;
-    async fn get_all_bids(&self, auction_id: Id<Auction>) -> anyhow::Result<Vec<Bid>>;
+    async fn get_all_bids(&self, auction_id: Id<Auction>) -> anyhow::Result<Vec<BidWithUsername>>;
 }

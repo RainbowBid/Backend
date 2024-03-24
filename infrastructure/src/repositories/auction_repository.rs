@@ -1,16 +1,17 @@
 use crate::models::auction::{AuctionModel, AuctionWithItemModel};
-use crate::models::bid::BidModel;
+use crate::models::bid::{BidModel, BidWithUsernameModel};
 use crate::repositories::DatabaseRepositoryImpl;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use domain::entities::auction::{Auction, AuctionWithItem};
-use domain::entities::bid::Bid;
+use domain::entities::bid::{Bid, BidWithUsername};
 use domain::entities::item::{Category, Item};
 use domain::entities::user::User;
 use domain::id::Id;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
 use log::error;
 use sqlx::types::Uuid;
+use std::str::FromStr;
 
 #[async_trait]
 impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
@@ -120,17 +121,21 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
         }
     }
 
-    async fn get_all_bids(&self, auction_id: Id<Auction>) -> anyhow::Result<Vec<Bid>> {
+    async fn get_all_bids(&self, auction_id: Id<Auction>) -> anyhow::Result<Vec<BidWithUsername>> {
         let pool = self.pool.0.clone();
 
-        let result = sqlx::query_as::<_, BidModel>(
+        let auction_id = Uuid::from_str(auction_id.value.to_string().as_str())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        let result = sqlx::query_as::<_, BidWithUsernameModel>(
             "SELECT \
                 bids.id, \
                 bids.item_id, \
                 bids.user_id, \
                 bids.value, \
+                users.username \
             FROM \
-            bids, auctions \
+            auctions, bids JOIN users ON bids.user_id = users.id  \
             WHERE auctions.id == $1",
         )
         .bind(auction_id)
@@ -143,7 +148,7 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
 
         Ok(result
             .into_iter()
-            .map(|bid_model| Bid::try_from(bid_model))
-            .collect::<Result<Vec<Bid>, anyhow::Error>>()?)
+            .map(|bid_model| BidWithUsername::try_from(bid_model))
+            .collect::<Result<Vec<BidWithUsername>, anyhow::Error>>()?)
     }
 }
