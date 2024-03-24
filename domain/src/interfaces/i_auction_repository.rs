@@ -3,6 +3,8 @@ use crate::entities::item::{Category, Item};
 use crate::id::Id;
 use async_trait::async_trait;
 use mockall::automock;
+use crate::entities::bid::Bid;
+use crate::entities::user::User;
 
 #[automock]
 #[async_trait]
@@ -13,4 +15,7 @@ pub trait IAuctionRepository {
         &self,
         category: Option<Category>,
     ) -> anyhow::Result<Vec<AuctionWithItem>>;
+
+    async fn create_bid(&self, bid: Bid) -> anyhow::Result<Option<Bid>>;
+    async fn get_all_bids(&self, auction_id: Id<Auction>) -> anyhow::Result<Vec<Bid>>;
 }
