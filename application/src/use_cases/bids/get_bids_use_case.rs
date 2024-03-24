@@ -4,7 +4,7 @@ use axum::Json;
 use domain::app_error::AppError;
 use domain::app_error::AppError::GetAuctionFailed;
 use domain::entities::auction::Auction;
-use domain::entities::bid::{ BidWithUsername};
+use domain::entities::bid::BidWithUsername;
 use domain::id::Id;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
 use serde::{Deserialize, Serialize};

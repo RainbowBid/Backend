@@ -1,5 +1,5 @@
 use crate::di::AppState;
-use axum::extract::{Path,  State};
+use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use domain::app_error::AppError;
 

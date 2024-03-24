@@ -60,7 +60,7 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
     ) -> Result<(), AppError> {
         info!("Creating bid for auction with id: {}", request.auction_id);
 
-        // ia auction din baza de date si verifica cu ownerul
+        // check if user is owner of the auction
         let auction_id = Id::<Auction>::try_from(request.auction_id.clone()).map_err(|_| {
             error!(
                 "Failed to get auction with auction_id = {}",
@@ -68,29 +68,54 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
             );
             AppError::CreateBidFailed(anyhow!("Failed to create bid."))
         })?;
-        let owner_id = self.auction_repository.find_ongoing_by_id(auction_id.clone()).await.ok_or_else(|| {
-            error!(
-                "Failed to get auction with auction_id = {}",
-                request.auction_id
-            );
-            AppError::CreateBidFailed(anyhow!("Failed to create bid."))
-        })?.user_id;
+        let auction = self
+            .auction_repository
+            .find_ongoing_by_id(auction_id.clone())
+            .await
+            .map_err(|_| {
+                error!(
+                    "Failed to get auction with auction_id = {}",
+                    request.auction_id
+                );
+                AppError::CreateBidFailed(anyhow!("Failed to create bid."))
+            })?
+            .ok_or_else(|| {
+                error!(
+                    "Failed to get auction with auction_id = {}",
+                    request.auction_id
+                );
+                AppError::CreateBidFailed(anyhow!("Failed to create bid."))
+            })?;
 
-        if request.user_id == owner_id {
-            error!("Owner with id = {} -> cannot bid on his own auction.", current_user.id.to_string());
+        if request.user_id == auction.user_id.value.to_string() {
+            error!(
+                "Owner with id: {} cannot bid on his own auction.",
+                current_user.id.to_string()
+            );
             return Err(AppError::OwnerCannotBid());
         }
-
-
 
         let bids_result = self.auction_repository.get_all_bids(auction_id).await;
 
         match bids_result {
             Ok(bids) => {
-                if bids.iter().any(|bid| bid.value > request.value) {
-                    return Err(AppError::CreateBidFailed(anyhow!(
-                        "New bid's value has to be the greatest from the ongoing auction."
-                    )));
+                if request.value < auction.starting_price {
+                    return Err(AppError::BidAmountMustBeGreaterThanStartingPrice(
+                        request.value,
+                        auction.starting_price,
+                    ));
+                }
+
+                if let Some(highest_bid) = bids
+                    .iter()
+                    .max_by(|a, b| a.value.partial_cmp(&b.value).unwrap())
+                {
+                    if request.value <= highest_bid.value {
+                        return Err(AppError::BidAmountMustBeGreaterThanCurrentHighestBid(
+                            request.value,
+                            highest_bid.value,
+                        ));
+                    }
                 }
 
                 let bid = Bid::try_from(request).map_err(|_| {

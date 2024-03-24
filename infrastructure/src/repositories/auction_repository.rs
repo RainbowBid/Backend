@@ -59,19 +59,27 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
         }
     }
 
-    async fn find_ongoing_by_id(&self, auction_id: Id<Auction>) -> anyhow::Result<Option<Auction>> {
+    async fn find_ongoing_by_id(
+        &self,
+        auction_id: Id<Auction>,
+    ) -> anyhow::Result<Option<AuctionWithItem>> {
         let pool = self.pool.0.clone();
         let auction_id = Uuid::parse_str(auction_id.value.to_string().as_str())
             .map_err(|e| anyhow!("{:?}", e))?;
 
-        let result = sqlx::query_as::<_, AuctionModel>(
-            "SELECT * \
-            FROM auctions \
-
-            WHERE id = $1 ",
+        let result = sqlx::query_as::<_, AuctionWithItemModel>(
+            "SELECT \
+                auctions.id, \
+                auctions.item_id, \
+                auctions.starting_price, \
+                auctions.end_date, \
+                items.brief, \
+                items.description, \
+                items.category, \
+                items.user_id \
             FROM \
             auctions INNER JOIN items ON auctions.item_id = items.id \
-            WHERE end_date > now() AND ($1 IS NULL OR items.category = $1)",
+            WHERE auctions.id = $1 AND end_date > now()",
         )
         .bind(auction_id)
         .fetch_optional(pool.as_ref())
@@ -82,7 +90,7 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
         })?;
 
         match result {
-            Some(auction) => Ok(Some(Auction::try_from(auction)?)),
+            Some(auction) => Ok(Some(AuctionWithItem::try_from(auction)?)),
             None => Ok(None),
         }
     }
@@ -175,7 +183,7 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
 
         Ok(result
             .into_iter()
-            .map(|bid_model| BidWithUsername::try_from(bid_model))
+            .map(BidWithUsername::try_from)
             .collect::<Result<Vec<BidWithUsername>, anyhow::Error>>()?)
     }
 }

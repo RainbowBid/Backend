@@ -53,6 +53,10 @@ pub enum AppError {
     CreateBidFailedInternalServerError(#[source] anyhow::Error),
     #[error("Owner cannot bid to its auction")]
     OwnerCannotBid(),
+    #[error("Bid amount ({0}) must be greater than the current highest bid ({1}).")]
+    BidAmountMustBeGreaterThanCurrentHighestBid(f32, f32),
+    #[error("Bid amount ({0}) must be greater than the auction starting price ({1}).")]
+    BidAmountMustBeGreaterThanStartingPrice(f32, f32),
 }
 
 impl IntoResponse for AppError {
@@ -121,8 +125,12 @@ impl IntoResponse for AppError {
             AppError::CreateBidFailedInternalServerError(_) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
             }
-            AppError::OwnerCannotBid() => {
-                (StatusCode::FORBIDDEN, error_message).into_response()
+            AppError::OwnerCannotBid() => (StatusCode::FORBIDDEN, error_message).into_response(),
+            AppError::BidAmountMustBeGreaterThanCurrentHighestBid(_, _) => {
+                (StatusCode::BAD_REQUEST, error_message).into_response()
+            }
+            AppError::BidAmountMustBeGreaterThanStartingPrice(_, _) => {
+                (StatusCode::BAD_REQUEST, error_message).into_response()
             }
         }
     }
