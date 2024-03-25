@@ -1,13 +1,16 @@
 use crate::models::auction::{AuctionModel, AuctionWithItemModel};
+use crate::models::bid::{BidModel, BidWithUsernameModel};
 use crate::repositories::DatabaseRepositoryImpl;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use domain::entities::auction::{Auction, AuctionWithItem};
+use domain::entities::bid::{Bid, BidWithUsername};
 use domain::entities::item::{Category, Item};
 use domain::id::Id;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
 use log::error;
 use sqlx::types::Uuid;
+use std::str::FromStr;
 
 #[async_trait]
 impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
@@ -34,6 +37,57 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
         }
     }
 
+    async fn find_all_expired(&self) -> anyhow::Result<Vec<Auction>> {
+        let pool = self.pool.0.clone();
+
+        let result =
+            sqlx::query_as::<_, AuctionModel>("SELECT * FROM auctions WHERE end_date <= now()")
+                .fetch_all(pool.as_ref())
+                .await
+                .map_err(|e| {
+                    error!("{:?}", e);
+                    anyhow!("{:?}", e)
+                })?;
+
+        Ok(result
+            .into_iter()
+            .map(|auction| auction.try_into())
+            .collect::<Result<Vec<Auction>, anyhow::Error>>()?)
+    }
+
+    async fn find_by_id(&self, auction_id: Id<Auction>) -> anyhow::Result<Option<AuctionWithItem>> {
+        let pool = self.pool.0.clone();
+        let auction_id = Uuid::parse_str(auction_id.value.to_string().as_str())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        let result = sqlx::query_as::<_, AuctionWithItemModel>(
+            "SELECT \
+                auctions.id, \
+                auctions.item_id, \
+                auctions.starting_price, \
+                auctions.end_date, \
+                items.brief, \
+                items.description, \
+                items.category, \
+                items.user_id \
+            FROM \
+            auctions INNER JOIN items ON auctions.item_id = items.id \
+            WHERE auctions.id = $1",
+        )
+        .bind(auction_id)
+        .fetch_optional(pool.as_ref())
+        .await
+        .map_err(|e| {
+            error!("{:?}", e);
+            anyhow!("{:?}", e)
+        })?;
+
+        match result {
+            Some(auction) => Ok(Some(AuctionWithItem::try_from(auction)?)),
+            None => Ok(None),
+        }
+    }
+
     async fn find_ongoing_by_item_id(&self, item_id: Id<Item>) -> anyhow::Result<Option<Auction>> {
         let pool = self.pool.0.clone();
         let item_id =
@@ -52,6 +106,41 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
 
         match result {
             Some(auction) => Ok(Some(Auction::try_from(auction)?)),
+            None => Ok(None),
+        }
+    }
+    async fn find_ongoing_by_id(
+        &self,
+        auction_id: Id<Auction>,
+    ) -> anyhow::Result<Option<AuctionWithItem>> {
+        let pool = self.pool.0.clone();
+        let auction_id = Uuid::parse_str(auction_id.value.to_string().as_str())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        let result = sqlx::query_as::<_, AuctionWithItemModel>(
+            "SELECT \
+                auctions.id, \
+                auctions.item_id, \
+                auctions.starting_price, \
+                auctions.end_date, \
+                items.brief, \
+                items.description, \
+                items.category, \
+                items.user_id \
+            FROM \
+            auctions INNER JOIN items ON auctions.item_id = items.id \
+            WHERE auctions.id = $1 AND end_date > now()",
+        )
+        .bind(auction_id)
+        .fetch_optional(pool.as_ref())
+        .await
+        .map_err(|e| {
+            error!("{:?}", e);
+            anyhow!("{:?}", e)
+        })?;
+
+        match result {
+            Some(auction) => Ok(Some(AuctionWithItem::try_from(auction)?)),
             None => Ok(None),
         }
     }
@@ -90,5 +179,97 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
             .into_iter()
             .map(|auction_with_item| auction_with_item.try_into())
             .collect::<Result<Vec<AuctionWithItem>, anyhow::Error>>()?)
+    }
+
+    async fn create_bid(&self, bid: Bid) -> anyhow::Result<Option<Bid>> {
+        let pool = self.pool.0.clone();
+
+        let bid = BidModel::try_from(bid)?;
+
+        let result = sqlx::query_as::<_, BidModel>(
+            "INSERT INTO bids (id, value, auction_id, user_id) VALUES ($1, $2, $3, $4) RETURNING *",
+        )
+        .bind(bid.id)
+        .bind(bid.value)
+        .bind(bid.auction_id)
+        .bind(bid.user_id)
+        .fetch_optional(pool.as_ref())
+        .await
+        .map_err(|e| {
+            error!("{:?}", e);
+            anyhow!("{:?}", e)
+        })?;
+
+        match result {
+            Some(bid) => Ok(Some(Bid::try_from(bid)?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn get_all_bids(&self, auction_id: Id<Auction>) -> anyhow::Result<Vec<BidWithUsername>> {
+        let pool = self.pool.0.clone();
+
+        let auction_id = Uuid::from_str(auction_id.value.to_string().as_str())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        let result = sqlx::query_as::<_, BidWithUsernameModel>(
+            "SELECT \
+                bids.id, \
+                bids.auction_id, \
+                bids.user_id, \
+                bids.value, \
+                users.username \
+            FROM \
+            auctions, bids INNER JOIN users ON bids.user_id = users.id  \
+            WHERE auctions.id = $1",
+        )
+        .bind(auction_id)
+        .fetch_all(pool.as_ref())
+        .await
+        .map_err(|e| {
+            error!("{:?}", e);
+            anyhow!("{:?}", e)
+        })?;
+
+        Ok(result
+            .into_iter()
+            .map(BidWithUsername::try_from)
+            .collect::<Result<Vec<BidWithUsername>, anyhow::Error>>()?)
+    }
+
+    async fn delete_auction(&self, auction_id: Id<Auction>) -> anyhow::Result<()> {
+        let pool = self.pool.0.clone();
+
+        let auction_id = Uuid::from_str(auction_id.value.to_string().as_str())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        sqlx::query("DELETE FROM auctions WHERE id = $1")
+            .bind(auction_id)
+            .execute(pool.as_ref())
+            .await
+            .map_err(|e| {
+                error!("{:?}", e);
+                anyhow!("{:?}", e)
+            })?;
+
+        Ok(())
+    }
+
+    async fn delete_bids_for_auction(&self, auction_id: Id<Auction>) -> anyhow::Result<()> {
+        let pool = self.pool.0.clone();
+
+        let auction_id = Uuid::from_str(auction_id.value.to_string().as_str())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        sqlx::query("DELETE FROM bids WHERE auction_id = $1")
+            .bind(auction_id)
+            .execute(pool.as_ref())
+            .await
+            .map_err(|e| {
+                error!("{:?}", e);
+                anyhow!("{:?}", e)
+            })?;
+
+        Ok(())
     }
 }

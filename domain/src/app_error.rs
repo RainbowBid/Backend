@@ -45,8 +45,20 @@ pub enum AppError {
     GetAuctionFailed(String),
     #[error("No auction found for item_id {0}")]
     NoAuctionFoundForItemId(String),
+    #[error("No auction found for id {0}")]
+    NoAuctionFoundForId(String),
     #[error("Failed to get auctions.")]
     FailedToGetAuctions(),
+    #[error("Failed to create bid.")]
+    CreateBidFailed(#[source] anyhow::Error),
+    #[error("Failed to create bid. Internal server error.")]
+    CreateBidFailedInternalServerError(#[source] anyhow::Error),
+    #[error("Owner cannot bid to its auction")]
+    OwnerCannotBid(),
+    #[error("Bid amount ({0}) must be greater than the current highest bid ({1}).")]
+    BidAmountMustBeGreaterThanCurrentHighestBid(f32, f32),
+    #[error("Bid amount ({0}) must be greater than the auction starting price ({1}).")]
+    BidAmountMustBeGreaterThanStartingPrice(f32, f32),
 }
 
 impl IntoResponse for AppError {
@@ -108,6 +120,22 @@ impl IntoResponse for AppError {
             }
             AppError::FailedToGetAuctions() => {
                 (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::CreateBidFailed(_) => {
+                (StatusCode::BAD_REQUEST, error_message).into_response()
+            }
+            AppError::CreateBidFailedInternalServerError(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::OwnerCannotBid() => (StatusCode::FORBIDDEN, error_message).into_response(),
+            AppError::BidAmountMustBeGreaterThanCurrentHighestBid(_, _) => {
+                (StatusCode::BAD_REQUEST, error_message).into_response()
+            }
+            AppError::BidAmountMustBeGreaterThanStartingPrice(_, _) => {
+                (StatusCode::BAD_REQUEST, error_message).into_response()
+            }
+            AppError::NoAuctionFoundForId(_) => {
+                (StatusCode::NOT_FOUND, error_message).into_response()
             }
         }
     }

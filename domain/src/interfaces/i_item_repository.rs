@@ -1,4 +1,5 @@
 use crate::entities::item::{Category, Item};
+use crate::entities::user::User;
 use crate::id::Id;
 use async_trait::async_trait;
 use mockall::automock;
@@ -13,4 +14,9 @@ pub trait IItemRepository {
         user_id: String,
         category: Option<Category>,
     ) -> anyhow::Result<Vec<Item>>;
+    async fn change_owner(
+        &self,
+        item_id: Id<Item>,
+        new_owner_id: Id<User>,
+    ) -> anyhow::Result<Option<Item>>;
 }

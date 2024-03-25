@@ -3,6 +3,10 @@ use std::sync::Arc;
 use application::use_cases::auctions::create_auction_use_case::CreateAuctionUseCase;
 use application::use_cases::auctions::get_ongoing_auction_for_item_use_case::GetAuctionByItemIdUseCase;
 use application::use_cases::auctions::get_ongoing_auctions_use_case::GetAuctionsUseCase;
+use application::use_cases::auctions::handle_expired_auction_use_case::HandleExpiredAuctionUseCase;
+use application::use_cases::auctions::handle_expired_auctions_use_case::HandleExpiredAuctionsUseCase;
+use application::use_cases::bids::create_bid_use_case::CreateBidUseCase;
+use application::use_cases::bids::get_bids_use_case::GetBidsUseCase;
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
 
@@ -32,6 +36,10 @@ pub struct Modules {
         CreateAuctionUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
     pub(crate) get_by_item_id: GetAuctionByItemIdUseCase<DatabaseRepositoryImpl<Auction>>,
     pub(crate) get_auctions_use_case: GetAuctionsUseCase<DatabaseRepositoryImpl<Auction>>,
+    pub(crate) get_bids_use_case: GetBidsUseCase<DatabaseRepositoryImpl<Auction>>,
+    pub(crate) create_bid_use_case: CreateBidUseCase<DatabaseRepositoryImpl<Auction>>,
+    pub(crate) handle_expired_auctions_use_case:
+        HandleExpiredAuctionsUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
 }
 
 impl Modules {
@@ -65,6 +73,18 @@ impl Modules {
 
         let get_auctions_use_case = GetAuctionsUseCase::new(auction_repository.clone());
 
+        let get_bids_use_case = GetBidsUseCase::new(auction_repository.clone());
+
+        let create_bid_use_case = CreateBidUseCase::new(auction_repository.clone());
+
+        let handle_expired_auction_use_case =
+            Arc::new(HandleExpiredAuctionUseCase::new(auction_repository.clone(), item_repository.clone()));
+
+        let handle_expired_auctions_use_case = HandleExpiredAuctionsUseCase::new(
+            auction_repository.clone(),
+            handle_expired_auction_use_case.clone(),
+        );
+
         Self {
             register_use_case,
             login_use_case,
@@ -76,6 +96,9 @@ impl Modules {
             create_auction_use_case,
             get_by_item_id,
             get_auctions_use_case,
+            get_bids_use_case,
+            create_bid_use_case,
+            handle_expired_auctions_use_case,
         }
     }
 }
@@ -84,6 +107,7 @@ pub struct Constants {
     pub jwt_key: String,
     pub allowed_origin: String,
     pub jwt_duration: String,
+    pub finalize_auctions_cron: String,
 }
 
 impl Constants {
@@ -100,10 +124,19 @@ impl Constants {
             .get("ALLOWED_ORIGIN")
             .expect("You need to set your ALLOWED_ORIGIN secret!");
 
+        let allowed_origin = secrets
+            .get("ALLOWED_ORIGIN")
+            .expect("You need to set your ALLOWED_ORIGIN secret!");
+
+        let finalize_auctions_cron = secrets
+            .get("FINALIZE_AUCTIONS_CRON")
+            .expect("You need to set your FINALIZE_AUCTIONS_CRON secret!");
+
         Self {
             jwt_key,
             allowed_origin,
             jwt_duration,
+            finalize_auctions_cron,
         }
     }
 }

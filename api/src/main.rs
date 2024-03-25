@@ -1,5 +1,6 @@
 mod di;
 mod endpoints;
+mod jobs;
 mod middleware;
 mod routes;
 
@@ -14,5 +15,5 @@ async fn main(
     #[shuttle_secrets::Secrets] secrets: SecretStore,
 ) -> shuttle_axum::ShuttleAxum {
     info!("Starting server...");
-    Ok(init_router(db, secrets).into())
+    Ok(init_router(db, secrets).await.into())
 }
