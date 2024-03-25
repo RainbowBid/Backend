@@ -3,6 +3,7 @@ use crate::repositories::DatabaseRepositoryImpl;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use domain::entities::item::{Category, Item};
+use domain::entities::user::User;
 use domain::id::Id;
 use domain::interfaces::i_item_repository::IItemRepository;
 use log::{error, info};
@@ -70,5 +71,38 @@ impl IItemRepository for DatabaseRepositoryImpl<Item> {
         })?;
 
         result.into_iter().map(Item::try_from).collect()
+    }
+
+    async fn change_owner(
+        &self,
+        item_id: Id<Item>,
+        new_owner_id: Id<User>,
+    ) -> anyhow::Result<Option<Item>> {
+        let pool = self.pool.0.clone();
+
+        // find item
+        let item = self.find(item_id.clone()).await?;
+
+        // change user_id
+        match item {
+            Some(mut item) => {
+                item.user_id = new_owner_id;
+                let item = ItemModel::try_from(item)?;
+                let result = sqlx::query_as::<_, ItemModel>(
+                    "UPDATE items SET user_id = $1 WHERE id = $2 RETURNING *",
+                )
+                .bind(item.user_id)
+                .bind(item.id)
+                .fetch_optional(pool.as_ref())
+                .await
+                .map_err(|e| anyhow!("{:?}", e))?;
+
+                match result {
+                    Some(item) => Ok(Some(Item::try_from(item)?)),
+                    None => Ok(None),
+                }
+            }
+            None => Ok(None),
+        }
     }
 }

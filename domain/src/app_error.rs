@@ -45,6 +45,8 @@ pub enum AppError {
     GetAuctionFailed(String),
     #[error("No auction found for item_id {0}")]
     NoAuctionFoundForItemId(String),
+    #[error("No auction found for id {0}")]
+    NoAuctionFoundForId(String),
     #[error("Failed to get auctions.")]
     FailedToGetAuctions(),
     #[error("Failed to create bid.")]
@@ -131,6 +133,9 @@ impl IntoResponse for AppError {
             }
             AppError::BidAmountMustBeGreaterThanStartingPrice(_, _) => {
                 (StatusCode::BAD_REQUEST, error_message).into_response()
+            }
+            AppError::NoAuctionFoundForId(_) => {
+                (StatusCode::NOT_FOUND, error_message).into_response()
             }
         }
     }
