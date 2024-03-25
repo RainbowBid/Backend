@@ -10,9 +10,12 @@ use axum::routing::{get, post};
 use axum::{middleware, Router};
 use shuttle_secrets::SecretStore;
 use sqlx::PgPool;
+use std::sync::Arc;
+use tokio_cron_scheduler::{Job, JobScheduler, JobSchedulerError};
 use tower_http::cors::CorsLayer;
+use tracing::log::{error, info};
 
-pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
+pub async fn init_router(db: PgPool, secrets: SecretStore) -> Router {
     let app_state = AppState::new(db, secrets);
 
     let cors = CorsLayer::new()
@@ -49,6 +52,11 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
                 .parse::<HeaderValue>()
                 .unwrap(),
         );
+
+    match init_job_scheduler(app_state.clone()).await{
+        Ok(_) => info!("Job scheduler started."),
+        Err(e) => error!("Error. Job scheduler failed to start: {:?}", e),
+    }
 
     let auth_router = Router::new()
         .route(
@@ -107,4 +115,45 @@ pub fn init_router(db: PgPool, secrets: SecretStore) -> Router {
         .nest("/auctions", auction_router)
         .with_state(app_state)
         .layer(cors)
+}
+
+// pub async fn init_job_scheduler(app_state: AppState) -> Result<(), JobSchedulerError> {
+//     let scheduler = JobScheduler::new().await?;
+//     let app_state_clone = Arc::new(app_state.clone());
+//     scheduler.add(
+//         Job::new_async(app_state.config.clone().finalize_auctions_cron.clone().as_str(), |uuid, mut l| {
+//             Box::pin(async move {
+//                 info!("Handle expired auctions job runs.");
+//
+//                 match &app_state_clone.modules.clone().handle_expired_auctions_use_case.execute().await{
+//                     Ok(_) => info!("Expired auctions job succeeded."),
+//                     Err(e) => error!("Error. Expired auctions job failed: {:?}", e),
+//                 }
+//             })
+//         })?
+//     ).await?;
+//
+//     scheduler.start().await?;
+//     Ok(())
+// }
+pub async fn init_job_scheduler(app_state: AppState) -> Result<(), JobSchedulerError> {
+    let scheduler = JobScheduler::new().await?;
+    let app_state_clone = Arc::new(app_state.clone());
+    let app_state_clone_for_closure = app_state_clone.clone(); // Clone app_state_clone here
+    scheduler.add(
+        Job::new_async(app_state.config.clone().finalize_auctions_cron.clone().as_str(), move |uuid, mut l| {
+            let app_state_clone = app_state_clone_for_closure.clone(); // Use the clone inside the closure
+            Box::pin(async move {
+                info!("Handle expired auctions job runs.");
+
+                match app_state_clone.modules.handle_expired_auctions_use_case.execute().await{
+                    Ok(_) => info!("Expired auctions job succeeded."),
+                    Err(e) => error!("Error. Expired auctions job failed: {:?}", e),
+                }
+            })
+        })?
+    ).await?;
+
+    scheduler.start().await?;
+    Ok(())
 }
