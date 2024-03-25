@@ -53,7 +53,7 @@ pub async fn init_router(db: PgPool, secrets: SecretStore) -> Router {
                 .unwrap(),
         );
 
-    match init_job_scheduler(app_state.clone()).await{
+    match init_job_scheduler(app_state.clone()).await {
         Ok(_) => info!("Job scheduler started."),
         Err(e) => error!("Error. Job scheduler failed to start: {:?}", e),
     }
@@ -140,19 +140,32 @@ pub async fn init_job_scheduler(app_state: AppState) -> Result<(), JobSchedulerE
     let scheduler = JobScheduler::new().await?;
     let app_state_clone = Arc::new(app_state.clone());
     let app_state_clone_for_closure = app_state_clone.clone(); // Clone app_state_clone here
-    scheduler.add(
-        Job::new_async(app_state.config.clone().finalize_auctions_cron.clone().as_str(), move |uuid, mut l| {
-            let app_state_clone = app_state_clone_for_closure.clone(); // Use the clone inside the closure
-            Box::pin(async move {
-                info!("Handle expired auctions job runs.");
+    scheduler
+        .add(Job::new_async(
+            app_state
+                .config
+                .clone()
+                .finalize_auctions_cron
+                .clone()
+                .as_str(),
+            move |_, _| {
+                let app_state_clone = app_state_clone_for_closure.clone(); // Use the clone inside the closure
+                Box::pin(async move {
+                    info!("Handle expired auctions job runs.");
 
-                match app_state_clone.modules.handle_expired_auctions_use_case.execute().await{
-                    Ok(_) => info!("Expired auctions job succeeded."),
-                    Err(e) => error!("Error. Expired auctions job failed: {:?}", e),
-                }
-            })
-        })?
-    ).await?;
+                    match app_state_clone
+                        .modules
+                        .handle_expired_auctions_use_case
+                        .execute()
+                        .await
+                    {
+                        Ok(_) => info!("Expired auctions job succeeded."),
+                        Err(e) => error!("Error. Expired auctions job failed: {:?}", e),
+                    }
+                })
+            },
+        )?)
+        .await?;
 
     scheduler.start().await?;
     Ok(())

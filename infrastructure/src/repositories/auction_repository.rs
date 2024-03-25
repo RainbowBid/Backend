@@ -220,8 +220,8 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
                 bids.value, \
                 users.username \
             FROM \
-            auctions, bids INNER JOIN users ON bids.user_id = users.id  \
-            WHERE auctions.id = $1",
+            bids INNER JOIN users ON bids.user_id = users.id  \
+            WHERE bids.auction_id = $1",
         )
         .bind(auction_id)
         .fetch_all(pool.as_ref())

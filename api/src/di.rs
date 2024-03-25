@@ -77,8 +77,10 @@ impl Modules {
 
         let create_bid_use_case = CreateBidUseCase::new(auction_repository.clone());
 
-        let handle_expired_auction_use_case =
-            Arc::new(HandleExpiredAuctionUseCase::new(auction_repository.clone(), item_repository.clone()));
+        let handle_expired_auction_use_case = Arc::new(HandleExpiredAuctionUseCase::new(
+            auction_repository.clone(),
+            item_repository.clone(),
+        ));
 
         let handle_expired_auctions_use_case = HandleExpiredAuctionsUseCase::new(
             auction_repository.clone(),
@@ -119,10 +121,6 @@ impl Constants {
         let jwt_duration = secrets
             .get("JWT_DURATION_MINUTES")
             .expect("You need to set you JWT_DURATION_MINUTES secret!");
-
-        let allowed_origin = secrets
-            .get("ALLOWED_ORIGIN")
-            .expect("You need to set your ALLOWED_ORIGIN secret!");
 
         let allowed_origin = secrets
             .get("ALLOWED_ORIGIN")
