@@ -1,6 +1,5 @@
 mod di;
 mod endpoints;
-mod jobs;
 mod middleware;
 mod routes;
 

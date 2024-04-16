@@ -3,7 +3,7 @@ use crate::models::bid::{BidModel, BidWithUsernameModel};
 use crate::repositories::DatabaseRepositoryImpl;
 use anyhow::anyhow;
 use async_trait::async_trait;
-use domain::entities::auction::{Auction, AuctionWithItem};
+use domain::entities::auction::{Auction, AuctionStrategy, AuctionWithItem};
 use domain::entities::bid::{Bid, BidWithUsername};
 use domain::entities::item::{Category, Item};
 use domain::id::Id;
@@ -18,12 +18,13 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
         let pool = self.pool.0.clone();
         let auction = AuctionModel::try_from(auction)?;
         let result = sqlx::query_as::<_, AuctionModel>(
-            "INSERT INTO auctions (id, item_id, starting_price, end_date) VALUES ($1, $2, $3, $4) RETURNING *",
+            "INSERT INTO auctions (id, item_id, starting_price, end_date, strategy) VALUES ($1, $2, $3, $4, $5) RETURNING *",
         )
             .bind(auction.id)
             .bind(auction.item_id)
             .bind(auction.starting_price)
             .bind(auction.end_date)
+            .bind(auction.strategy)
             .fetch_optional(pool.as_ref())
             .await
             .map_err(|e| {
@@ -69,7 +70,8 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
                 items.brief, \
                 items.description, \
                 items.category, \
-                items.user_id \
+                items.user_id, \
+                auctions.strategy \
             FROM \
             auctions INNER JOIN items ON auctions.item_id = items.id \
             WHERE auctions.id = $1",
@@ -94,9 +96,10 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
             Uuid::parse_str(item_id.value.to_string().as_str()).map_err(|e| anyhow!("{:?}", e))?;
 
         let result = sqlx::query_as::<_, AuctionModel>(
-            "SELECT * FROM auctions WHERE item_id = $1 AND end_date > now()",
+            "SELECT * FROM auctions WHERE item_id = $1 AND (end_date > now() OR (end_date <= now() AND strategy = $2))",
         )
         .bind(item_id)
+            .bind::<String>(AuctionStrategy::RequestFinalApproval.into())
         .fetch_optional(pool.as_ref())
         .await
         .map_err(|e| {
@@ -126,7 +129,8 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
                 items.brief, \
                 items.description, \
                 items.category, \
-                items.user_id \
+                items.user_id, \
+                auctions.strategy \
             FROM \
             auctions INNER JOIN items ON auctions.item_id = items.id \
             WHERE auctions.id = $1 AND end_date > now()",
@@ -162,7 +166,8 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
                 items.brief, \
                 items.description, \
                 items.category, \
-                items.user_id \
+                items.user_id, \
+                auctions.strategy \
             FROM \
             auctions INNER JOIN items ON auctions.item_id = items.id \
             WHERE end_date > now() AND ($1 IS NULL OR items.category = $1)",
