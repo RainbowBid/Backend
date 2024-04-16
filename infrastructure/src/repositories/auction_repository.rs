@@ -170,9 +170,10 @@ impl IAuctionRepository for DatabaseRepositoryImpl<Auction> {
                 auctions.strategy \
             FROM \
             auctions INNER JOIN items ON auctions.item_id = items.id \
-            WHERE end_date > now() AND ($1 IS NULL OR items.category = $1)",
+            WHERE (end_date > now() OR (end_date <= now() AND strategy = $2)) AND ($1 IS NULL OR items.category = $1)",
         )
         .bind(category)
+            .bind::<String>(AuctionStrategy::RequestFinalApproval.into())
         .fetch_all(pool.as_ref())
         .await
         .map_err(|e| {
