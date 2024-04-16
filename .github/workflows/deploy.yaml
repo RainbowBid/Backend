@@ -17,6 +17,8 @@ jobs:
           allow-dirty: "true"
           no-test: "false"
           cargo-shuttle-version: "0.28.1"
-#          secrets: |
-#            MY_AWESOME_SECRET_1 = '${{ secrets.SECRET_1 }}'
-#            MY_AWESOME_SECRET_2 = '${{ secrets.SECRET_2 }}'
+          secrets: |
+            ALLOWED_ORIGIN = '${{ secrets.ALLOWED_ORIGIN }}'
+            JWT_KEY = '${{ secrets.JWT_KEY }}'
+            JWT_DURATION = '${{ secrets.JWT_DURATION }}'
+            FINALIZE_AUCTIONS_CRON = '${{ secrets.FINALIZE_AUCTIONS_CRON }}'
