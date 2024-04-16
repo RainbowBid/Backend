@@ -156,6 +156,7 @@ mod tests {
             item_id.clone().try_into().unwrap(),
             100.0,
             chrono::Utc::now() + chrono::Duration::days(1),
+            domain::entities::auction::AuctionStrategy::Standard,
         );
 
         let item_id_clone = item_id.clone();
