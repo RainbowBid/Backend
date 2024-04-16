@@ -7,13 +7,14 @@ use axum_valid::Valid;
 use domain::app_error::AppError;
 use domain::entities::user::User;
 use http::StatusCode;
-use tracing::error;
+use tracing::{error, info};
 
 pub async fn handle(
     State(state): State<AppState>,
     Extension(current_user): Extension<User>,
     Valid(Json(request)): Valid<Json<CreateAuctionRequest>>,
 ) -> Result<impl IntoResponse, AppError> {
+    info!("create auction {:?}", request);
     let response = state
         .modules
         .create_auction_use_case
