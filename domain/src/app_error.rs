@@ -59,6 +59,14 @@ pub enum AppError {
     BidAmountMustBeGreaterThanCurrentHighestBid(f32, f32),
     #[error("Bid amount ({0}) must be greater than the auction starting price ({1}).")]
     BidAmountMustBeGreaterThanStartingPrice(f32, f32),
+    #[error("Cannot confirm auction if user is not the owner of the auction.")]
+    CannotConfirmAuctionIfUserIsNotOwner(),
+    #[error("Auction confirmation failed.")]
+    AuctionConfirmationFailed(),
+    #[error("Cannot confirm auction if strategy is not RequestFinalApproval")]
+    CannotConfirmAuctionIfStrategyIsNotRequestFinalApproval(),
+    #[error("Cannot confirm auction if auction is not expired")]
+    CannotConfirmAuctionIfAuctionIsNotExpired(),
 }
 
 impl IntoResponse for AppError {
@@ -136,6 +144,18 @@ impl IntoResponse for AppError {
             }
             AppError::NoAuctionFoundForId(_) => {
                 (StatusCode::NOT_FOUND, error_message).into_response()
+            }
+            AppError::CannotConfirmAuctionIfUserIsNotOwner() => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::AuctionConfirmationFailed() => {
+                (StatusCode::INTERNAL_SERVER_ERROR, error_message).into_response()
+            }
+            AppError::CannotConfirmAuctionIfStrategyIsNotRequestFinalApproval() => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::CannotConfirmAuctionIfAuctionIsNotExpired() => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
             }
         }
     }

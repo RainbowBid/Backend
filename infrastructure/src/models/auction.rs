@@ -1,4 +1,4 @@
-use domain::entities::auction::{Auction, AuctionWithItem};
+use domain::entities::auction::{Auction, AuctionStrategy, AuctionWithItem};
 use sqlx::types::Uuid;
 use sqlx::FromRow;
 
@@ -8,6 +8,7 @@ pub struct AuctionModel {
     pub item_id: Uuid,
     pub starting_price: f32,
     pub end_date: sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc>,
+    pub strategy: String,
 }
 
 impl TryFrom<AuctionModel> for Auction {
@@ -22,6 +23,7 @@ impl TryFrom<AuctionModel> for Auction {
                 auction_table.end_date.naive_utc(),
                 auction_table.end_date.offset().to_owned(),
             ),
+            strategy: AuctionStrategy::from(auction_table.strategy),
         })
     }
 }
@@ -38,6 +40,7 @@ impl TryFrom<Auction> for AuctionModel {
                 auction.end_date.naive_utc(),
                 auction.end_date.offset().to_owned(),
             ),
+            strategy: String::from(auction.strategy),
         })
     }
 }
@@ -52,6 +55,7 @@ pub struct AuctionWithItemModel {
     pub description: String,
     pub category: String,
     pub user_id: Uuid,
+    pub strategy: String,
 }
 
 impl TryFrom<AuctionWithItemModel> for AuctionWithItem {
@@ -70,6 +74,7 @@ impl TryFrom<AuctionWithItemModel> for AuctionWithItem {
             description: auction_table.description,
             category: auction_table.category.into(),
             user_id: auction_table.user_id.to_string().try_into()?,
+            strategy: AuctionStrategy::from(auction_table.strategy),
         })
     }
 }
@@ -90,6 +95,7 @@ impl TryFrom<AuctionWithItem> for AuctionWithItemModel {
             description: auction.description,
             category: auction.category.into(),
             user_id: Uuid::parse_str(&auction.user_id.to_string())?,
+            strategy: String::from(auction.strategy),
         })
     }
 }

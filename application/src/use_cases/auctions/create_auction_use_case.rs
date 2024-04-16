@@ -41,6 +41,7 @@ pub mod dtos {
             message = "End date must be at least 1 minute in the future"
         ))]
         pub end_date: i64,
+        pub strategy: String,
     }
 
     impl TryFrom<CreateAuctionRequest> for Auction {
@@ -56,6 +57,7 @@ pub mod dtos {
                 dto.starting_price,
                 DateTime::<Utc>::from_timestamp_millis(dto.end_date)
                     .unwrap_or(DateTime::<Utc>::from(SystemTime::now())),
+                dto.strategy.into(),
             ))
         }
     }
@@ -142,7 +144,7 @@ mod tests {
     use crate::use_cases::auctions::create_auction_use_case::{dtos, CreateAuctionUseCase};
     use anyhow::anyhow;
     use chrono::Utc;
-    use domain::entities::auction::Auction;
+    use domain::entities::auction::{Auction, AuctionStrategy};
     use domain::entities::item::{Category, Item};
     use domain::entities::user::User;
     use domain::id::Id;
@@ -198,6 +200,7 @@ mod tests {
                     Id::try_from(item_id_clone2.to_string()).unwrap(),
                     0.0,
                     Utc::now() + chrono::Duration::minutes(10),
+                    AuctionStrategy::Standard,
                 )))
             });
 
@@ -208,6 +211,7 @@ mod tests {
             item_id: item_id.to_string(),
             starting_price: 0.0,
             end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
+            strategy: AuctionStrategy::Standard.into(),
         };
 
         // Act
@@ -242,6 +246,7 @@ mod tests {
             item_id: item_id.to_string(),
             starting_price: 0.0,
             end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
+            strategy: AuctionStrategy::Standard.into(),
         };
 
         // Act
@@ -290,6 +295,7 @@ mod tests {
             item_id: item_id.to_string(),
             starting_price: 0.0,
             end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
+            strategy: AuctionStrategy::Standard.into(),
         };
 
         // Act
@@ -346,6 +352,7 @@ mod tests {
                     Id::try_from(item_id_clone.to_string()).unwrap(),
                     0.0,
                     Utc::now() + chrono::Duration::minutes(10),
+                    AuctionStrategy::Standard,
                 )))
             });
 
@@ -356,6 +363,7 @@ mod tests {
             item_id: item_id.to_string(),
             starting_price: 0.0,
             end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
+            strategy: AuctionStrategy::Standard.into(),
         };
 
         // Act
@@ -396,6 +404,7 @@ mod tests {
             item_id: "invalid_id".to_string(),
             starting_price: 0.0,
             end_date: (Utc::now() + chrono::Duration::minutes(10)).timestamp(),
+            strategy: AuctionStrategy::Standard.into(),
         };
 
         // Act

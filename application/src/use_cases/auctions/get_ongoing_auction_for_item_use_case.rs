@@ -17,6 +17,7 @@ pub struct AuctionDto {
     pub item_id: String,
     pub starting_price: f32,
     pub end_date: i64,
+    pub strategy: String,
 }
 
 impl IntoResponse for AuctionDto {
@@ -32,6 +33,7 @@ impl AuctionDto {
             item_id: auction.item_id.to_string(),
             starting_price: auction.starting_price,
             end_date: auction.end_date.timestamp(),
+            strategy: auction.strategy.clone().into(),
         }
     }
 }

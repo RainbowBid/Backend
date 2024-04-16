@@ -107,6 +107,11 @@ pub async fn init_router(db: PgPool, secrets: SecretStore) -> Router {
             "/:auction_id/bids/all",
             get(endpoints::auctions::bids::get_all_endpoint::handle)
                 .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
+        )
+        .route(
+            "/:auction_id/confirm",
+            post(endpoints::auctions::confirm_endpoint::handle)
+                .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
         );
 
     Router::new()
@@ -117,25 +122,6 @@ pub async fn init_router(db: PgPool, secrets: SecretStore) -> Router {
         .layer(cors)
 }
 
-// pub async fn init_job_scheduler(app_state: AppState) -> Result<(), JobSchedulerError> {
-//     let scheduler = JobScheduler::new().await?;
-//     let app_state_clone = Arc::new(app_state.clone());
-//     scheduler.add(
-//         Job::new_async(app_state.config.clone().finalize_auctions_cron.clone().as_str(), |uuid, mut l| {
-//             Box::pin(async move {
-//                 info!("Handle expired auctions job runs.");
-//
-//                 match &app_state_clone.modules.clone().handle_expired_auctions_use_case.execute().await{
-//                     Ok(_) => info!("Expired auctions job succeeded."),
-//                     Err(e) => error!("Error. Expired auctions job failed: {:?}", e),
-//                 }
-//             })
-//         })?
-//     ).await?;
-//
-//     scheduler.start().await?;
-//     Ok(())
-// }
 pub async fn init_job_scheduler(app_state: AppState) -> Result<(), JobSchedulerError> {
     let scheduler = JobScheduler::new().await?;
     let app_state_clone = Arc::new(app_state.clone());

@@ -47,6 +47,7 @@ pub struct AuctionWithItemDto {
     pub description: String,
     pub category: String,
     pub user_id: String,
+    pub strategy: String,
 }
 impl AuctionWithItemDto {
     fn from(auction: &AuctionWithItem) -> Self {
@@ -59,6 +60,7 @@ impl AuctionWithItemDto {
             description: auction.description.clone(),
             category: auction.category.clone().into(),
             user_id: auction.user_id.clone().to_string(),
+            strategy: auction.strategy.clone().into(),
         }
     }
 }

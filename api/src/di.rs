@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use application::use_cases::auctions::confirm_auction_use_case::ConfirmAuctionUseCase;
 use application::use_cases::auctions::create_auction_use_case::CreateAuctionUseCase;
 use application::use_cases::auctions::get_ongoing_auction_for_item_use_case::GetAuctionByItemIdUseCase;
 use application::use_cases::auctions::get_ongoing_auctions_use_case::GetAuctionsUseCase;
@@ -40,6 +41,8 @@ pub struct Modules {
     pub(crate) create_bid_use_case: CreateBidUseCase<DatabaseRepositoryImpl<Auction>>,
     pub(crate) handle_expired_auctions_use_case:
         HandleExpiredAuctionsUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
+    pub(crate) confirm_auction_use_case:
+        ConfirmAuctionUseCase<DatabaseRepositoryImpl<Auction>, DatabaseRepositoryImpl<Item>>,
 }
 
 impl Modules {
@@ -87,6 +90,9 @@ impl Modules {
             handle_expired_auction_use_case.clone(),
         );
 
+        let confirm_auction_use_case =
+            ConfirmAuctionUseCase::new(auction_repository.clone(), item_repository.clone());
+
         Self {
             register_use_case,
             login_use_case,
@@ -101,6 +107,7 @@ impl Modules {
             get_bids_use_case,
             create_bid_use_case,
             handle_expired_auctions_use_case,
+            confirm_auction_use_case,
         }
     }
 }

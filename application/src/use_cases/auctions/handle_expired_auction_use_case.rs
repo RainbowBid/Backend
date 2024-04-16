@@ -1,5 +1,5 @@
 use domain::app_error::AppError;
-use domain::entities::auction::Auction;
+use domain::entities::auction::{Auction, AuctionStrategy};
 use domain::id::Id;
 use domain::interfaces::i_auction_repository::IAuctionRepository;
 use domain::interfaces::i_item_repository::IItemRepository;
@@ -39,6 +39,10 @@ impl<R1: IAuctionRepository, R2: IItemRepository> HandleExpiredAuctionUseCase<R1
                 )
             })?
             .ok_or_else(|| AppError::NoAuctionFoundForId(parsed_auction_id.value.to_string()))?;
+
+        if auction_with_item.strategy == AuctionStrategy::RequestFinalApproval {
+            return Ok(());
+        }
 
         // Get all bids for auction
         let bids = self
