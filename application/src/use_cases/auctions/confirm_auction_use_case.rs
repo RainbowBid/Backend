@@ -50,7 +50,7 @@ impl<R1: IAuctionRepository, R2: IItemRepository> ConfirmAuctionUseCase<R1, R2> 
                 error!("Failed to get auction with auction_id = {}", auction_id);
                 AppError::AuctionConfirmationFailed()
             })?;
-        
+
         if auction.end_date > chrono::Utc::now() {
             error!("Cannot confirm auction if auction is not expired");
             return Err(AppError::CannotConfirmAuctionIfAuctionIsNotExpired());

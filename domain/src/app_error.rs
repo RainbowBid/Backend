@@ -67,6 +67,8 @@ pub enum AppError {
     CannotConfirmAuctionIfStrategyIsNotRequestFinalApproval(),
     #[error("Cannot confirm auction if auction is not expired")]
     CannotConfirmAuctionIfAuctionIsNotExpired(),
+    #[error("Cannot bid on expired auction.")]
+    CannotBidOnExpiredAuction(),
 }
 
 impl IntoResponse for AppError {
@@ -155,6 +157,9 @@ impl IntoResponse for AppError {
                 (StatusCode::FORBIDDEN, error_message).into_response()
             }
             AppError::CannotConfirmAuctionIfAuctionIsNotExpired() => {
+                (StatusCode::FORBIDDEN, error_message).into_response()
+            }
+            AppError::CannotBidOnExpiredAuction() => {
                 (StatusCode::FORBIDDEN, error_message).into_response()
             }
         }

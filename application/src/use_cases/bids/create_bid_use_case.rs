@@ -87,6 +87,11 @@ impl<R: IAuctionRepository> CreateBidUseCase<R> {
                 AppError::CreateBidFailed(anyhow!("Failed to create bid."))
             })?;
 
+        if auction.end_date < chrono::Utc::now() {
+            error!("Cannot bid on expired auction.");
+            return Err(AppError::CannotBidOnExpiredAuction());
+        }
+
         if request.user_id == auction.user_id.value.to_string() {
             error!(
                 "Owner with id: {} cannot bid on his own auction.",
